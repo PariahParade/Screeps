@@ -15,7 +15,38 @@ var roleBuilder = {
 	    }
 
 	    if(creep.memory.building) {
-	        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
+	        /*
+	        var targets = [];
+	        for (let sites in Game.constructionSites) { 
+	            targets.push(Game.getObjectById(sites))
+	        };
+	        //console.log(targets);
+	        if (targets.length) {
+	            if(creep.build(Game.getObjectById(targets[0])) == ERR_NOT_IN_RANGE) {
+	                // If we're not in the right room, we need to move there.
+	                if (creep.room == targets.pos.room) {
+	                    console.log("if; Creep room: " + cree.room.name + " target room: " + targets.pos.room);
+	                }
+	                else {
+	                    console.log("else; Creep room: " + cree.room.name + " target room: " + targets.pos.room);
+	                }
+	                
+                    creep.moveTo(targets[0]);
+                    //creep.say(targets[0].structureType + " " + targets[0].progress + "/" + targets[0].progressTotal);
+                }
+	        }
+	        else {
+	            //console.log(targets);
+                //console.log("Nothing to build so " + creep.name + " is upgrading");
+                roleUpgrader.run(creep);
+            }
+	        */
+	        
+	        //for (var thisRoom in Game.rooms) {
+	            
+	        //}
+	        
+	        var targets = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
             if(targets.length) {
                 if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0]);
@@ -26,6 +57,7 @@ var roleBuilder = {
                 console.log("Nothing to build so " + creep.name + " is upgrading");
                 roleUpgrader.run(creep);
             }
+            
 	    }
 	    else {
 	        //Pickup any energy that might be dropped around the creep
@@ -37,7 +69,7 @@ var roleBuilder = {
 	        
 	        // Otherwide move to the nearest container and pickup energy
 	        let container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-	           filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 200 
+	           filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 50 
 	        });
 	        if (container) {
 	            if (creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {

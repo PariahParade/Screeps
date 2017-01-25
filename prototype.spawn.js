@@ -63,22 +63,36 @@ module.exports = function() {
             
             
         };
+    
+    StructureSpawn.prototype.createClaimer = 
+        function (energy, home, target) {
+            var body = [];
+            
+            body.push(CLAIM, CLAIM, MOVE, MOVE);
+            
+            // Create creep with the body built body
+            return this.createCreep(body, undefined, {
+               role: 'claimer',
+               home: home,
+               target: target
+            });
+        };
         
-        StructureSpawn.prototype.createTransporter = 
-            function (energy) {
-                var numberOfParts = Math.floor(energy/150);
-                var body = [];
-                
-                for (let i = 0; i < numberOfParts; i++) {
-                    body.push(CARRY);
-                    body.push(CARRY);
-                    body.push(MOVE);
-                }
-                
-                // Create creep with the built body
-                return this.createCreep(body, undefined, {
-                   role: 'transporter',
-                   working: false
-                });
-            };
+    StructureSpawn.prototype.createTransporter = 
+        function (energy) {
+            var numberOfParts = Math.floor(energy/150);
+            var body = [];
+            
+            for (let i = 0; i < numberOfParts; i++) {
+                body.push(CARRY);
+                body.push(CARRY);
+                body.push(MOVE);
+            }
+            
+            // Create creep with the built body
+            return this.createCreep(body, undefined, {
+               role: 'transporter',
+               working: false
+            });
+        };
 };

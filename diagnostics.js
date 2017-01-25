@@ -24,6 +24,7 @@ var diagnostics = {
             console.log("miners         : " + _.sum(Game.creeps, (c) => c.memory.role == 'miner'));
             console.log("transporters   : " + _.sum(Game.creeps, (c) => c.memory.role == 'transporter'));
             console.log("longdistance   : " + _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceHarvester'));
+            console.log("---------------------------------------------");
         }
         
         return returnString;

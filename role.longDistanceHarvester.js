@@ -13,22 +13,21 @@ var roleLongDistanceHarvester = {
 	    }
         
         if(creep.memory.working) {
+            // Energy is full. If we're home, lets drop off our stuff
             if (creep.room.name == creep.memory.home) {
-                var targets = creep.room.find(FIND_STRUCTURES, {
+                var targetStorage = creep.room.find(FIND_STRUCTURES, {
                     filter: (structure) => {
-                        return (structure.structureType == STRUCTURE_EXTENSION ||
-                                structure.structureType == STRUCTURE_CONTAINER ||
-                                structure.structureType == STRUCTURE_SPAWN ||
-                                structure.structureType == STRUCTURE_TOWER) && structure.energy < structure.energyCapacity;
+                        return (structure.structureType == STRUCTURE_STORAGE);
                     }
                 });
-                if(targets.length > 0) {
-                    if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(targets[0]);
-                        creep.say('LD mv ' + targets[0].structureType);
+                if(targetStorage.length > 0) {
+                    if(creep.transfer(targetStorage[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(targetStorage[0]);
+                        creep.say('LD mv ' + targetStorage[0].structureType);
                     }
                 }
             }
+            // If we're not home, we need to get there!
             else {
                 var exit = creep.room.findExitTo(creep.memory.home);
                 creep.moveTo(creep.pos.findClosestByRange(exit));
@@ -38,6 +37,14 @@ var roleLongDistanceHarvester = {
         // Not working--Need Energy
 	    else {
 	        if (creep.room.name == creep.memory.target) {
+	            //Pickup any energy that might be dropped around the creep
+                var droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
+                if (droppedEnergy.length) {
+                    //console.log(this.name + "found " + droppedEnergy[0].energy + " energy to pick up.");
+                    creep.say(droppedEnergy[0].energy + "nrg")
+                    creep.pickup(droppedEnergy[0]);
+                }
+	            
 	            var source = creep.room.find(FIND_SOURCES)[creep.memory.sourceId];
     	        if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
     	            creep.moveTo(source);

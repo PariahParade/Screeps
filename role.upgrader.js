@@ -21,7 +21,7 @@ var roleUpgrader = {
         }
         else {
             //console.log("get nrg fail?");
-            creep.getEnergy(true);
+            creep.getEnergy(true, true, false);
         }
 	}
 };
