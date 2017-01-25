@@ -1,6 +1,17 @@
-//TODO: Scout finish
-//TODO: Claimer start
+//TODO: Evaluate transporter, fix if needed.
+//TODO: getEnergy function confuses creeps, they try to go for every direction
+    // Need for them to evaluate what is best. What's most full?
+//TODO: Figure out building in other rooms
+//TODO: Scout/Soldier finish
 //TODO: Storage usage
+    //Started; need to finish
+//TODO: Have more creeps use prototypes
+//TODO: Refactor Tower
+//TODO: Refactor spawning and clean it up
+    // Need to do math on how much energy a room can create and how much I need
+    // to exploit that. Maybe make it dynamic.
+
+
 
 require('prototype.spawn')();
 require('prototype.creep');
@@ -22,12 +33,13 @@ var roleLongDistanceHarvester = require('role.longDistanceHarvester');
 
 
 var min_harvesters = 3;
-var min_builders = 3;
+var min_builders = 2;
 var min_repairers = 1;
-var min_wallers = 2;
-var min_upgraders =4;
+var min_wallers = 1;
+var min_upgraders = 3;
 var min_miners = 2;
 var min_transporters = 0;
+var min_claimers = 1;
 var min_longDistanceHarvesters = 2;
 
 var HOME = Game.spawns.Spawn1.room.name;
@@ -47,19 +59,24 @@ module.exports.loop = function() {
         }
 
 
-        var tower = Game.getObjectById('58852e865c4ce56101732c13');
+        var tower = Game.getObjectById('58856530271525da508fb05c');
         if (tower) {
             var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
             if (closestHostile) {
                 tower.attack(closestHostile);
             }
-
+            
+            /*
             var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
                 filter: (structure) => structure.hits < structure.hitsMax && structure.structureType != STRUCTURE_WALL
-            });
-            if (closestDamagedStructure) {
-                //tower.repair(closestDamagedStructure);
+                });
+            if(closestDamagedStructure) {
+                tower.repair(closestDamagedStructure)
+                console.log("Tower repaired " + closestDamagedStructure.structureType + " at " + closestDamagedStructure.pos);
             }
+            */
+
+            
         }
 
         for (let name in Game.creeps) {
@@ -80,6 +97,7 @@ module.exports.loop = function() {
         var numberOfUpgraders = _.sum(Game.creeps, (c) => c.memory.role == 'upgrader');
         var numberOfMiners = _.sum(Game.creeps, (c) => c.memory.role == 'miner');
         var numberOfTransporters = _.sum(Game.creeps, (c) => c.memory.role == 'transporter');
+        var numberOfClaimers = _.sum(Game.creeps, (c) => c.memory.role == 'claimer');
         var numberOfLongDistanceHarvesters = _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceHarvester');
 
         var energy = Game.spawns.Spawn1.room.energyCapacityAvailable;
@@ -104,6 +122,9 @@ module.exports.loop = function() {
         } else if (numberOfTransporters < min_transporters) {
             max_creeps = false;
             var newCreepName = Game.spawns.Spawn1.createTransporter(energy);
+        } else if (numberOfClaimers < min_claimers) {
+            max_creeps = false;
+            var newCreepName = Game.spawns.Spawn1.createClaimer(energy, HOME, 'W66S88');
         } else if (numberOfBuilders < min_builders) {
             max_creeps = false;
             var newCreepName = Game.spawns.Spawn1.createCustomCreep(energy, 'builder');
@@ -129,7 +150,7 @@ module.exports.loop = function() {
 
 
         //console.log("Max Creeps:" + max_creeps);
-        diagnostics.countCreeps();
+        //diagnostics.countCreeps();
 
     });
 }

@@ -37,15 +37,43 @@ Creep.prototype.runRole =
     }
 
 /** @function
-    @param {bool} useContainer */
+    @param {bool} useContainer
+    @param {bool} useStorage */
 Creep.prototype.getEnergy =
-    function(useContainer) {
+    function(useContainer, useStorage, ableToHarvest) {
         //Pickup any energy that might be dropped around the creep
-        var droppedEnergy = this.pos.findInRange(FIND_DROPPED_ENERGY, 1);
-        if (droppedEnergy.length) {
-            //console.log(this.name + "found " + droppedEnergy[0].energy + " energy to pick up.");
-            this.say(droppedEnergy[0].energy + "nrg")
-            this.pickup(droppedEnergy[0]);
+        var droppedEnergy = this.pos.findClosestByPath(FIND_DROPPED_ENERGY);
+        console.log(droppedEnergy.energy);
+        if (droppedEnergy > this.energyCapacityAvailable) {
+            useStorage == false;
+            useContainer == false;
+            ableToHarvest == false;
+            if (this.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
+                this.moveTo(droppedEnergy);
+            }
+            else {
+                this.say(droppedEnergy.energy + "nrg")
+            }
+        }
+        
+        if (useStorage) {
+            if (!this.memory.storedStorage) {
+                let targetStorage = this.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: structure => structure.structureType == STRUCTURE_STORAGE
+                });
+                if (targetStorage){
+                    this.memory.storedStorage = targetStorage.id;                    
+                }
+                else {
+                    this.say("no storage!");
+                }
+            } else {
+                if (this.withdraw(Game.getObjectById(this.memory.storedStorage), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    this.moveTo(Game.getObjectById(this.memory.storedStorage));
+                    this.say("strg nrg");
+                }
+
+            }
         }
 
         if (useContainer) {
@@ -57,15 +85,39 @@ Creep.prototype.getEnergy =
                     this.memory.storedContainer = container.id;                    
                 }
                 else {
-                    creep.say("nrg short");
+                    this.say("nrg short");
                 }
             } else {
-                console.log("test container");
                 if (this.withdraw(Game.getObjectById(this.memory.storedContainer), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     this.moveTo(Game.getObjectById(this.memory.storedContainer));
-                    this.say("need nrg");
+                    this.say("cntnr nrg");
                 }
 
             }
         }
+        
+        
+        //Pickup any energy that might be dropped around the creep
+        var droppedEnergy = this.pos.findClosestByPath(FIND_DROPPED_ENERGY);
+        //console.log(droppedEnergy);
+        if (droppedEnergy) {
+            console.log(this.name + " in nrg");
+            if (this.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
+                this.moveTo(droppedEnergy);
+            }
+            else {
+                this.say(droppedEnergy.energy + "nrg")
+            }
+        }
+        
+        
+        if (ableToHarvest) {
+            // Backup in case miners die for some reason
+            var source = this.pos.findClosestByPath(FIND_SOURCES);
+	        if (this.harvest(source) == ERR_NOT_IN_RANGE) {
+	            this.moveTo(source);
+	        }
+        }
+        
+        
     };
