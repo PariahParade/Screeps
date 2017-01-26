@@ -15,22 +15,12 @@
 
 require('prototype.spawn')();
 require('prototype.creep');
+require('prototype.tower');
 
 // Any modules that you use that modify the game's prototypes should be required
 // before you require the profiler.
 const profiler = require('screeps-profiler');
 const diagnostics = require('diagnostics');
-
-/*
-var roleHarvester = require('role.harvester');
-var roleUpgrader = require('role.upgrader');
-var roleBuilder = require('role.builder');
-var roleRepairer = require('role.repairer');
-var roleWaller = require('role.waller');
-var roleMiner = require('role.miner');
-var roleLongDistanceHarvester = require('role.longDistanceHarvester');
-*/
-
 
 var min_harvesters = 3;
 var min_builders = 2;
@@ -38,7 +28,7 @@ var min_repairers = 1;
 var min_wallers = 1;
 var min_upgraders = 3;
 var min_miners = 2;
-var min_transporters = 0;
+var min_transporters = 1;
 var min_claimers = 1;
 var min_longDistanceHarvesters = 2;
 
@@ -57,28 +47,14 @@ module.exports.loop = function() {
                 delete Memory.creeps[name];
             }
         }
-
-
-        var tower = Game.getObjectById('58856530271525da508fb05c');
-        if (tower) {
-            var closestHostile = tower.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-            if (closestHostile) {
-                tower.attack(closestHostile);
-            }
-            
-            /*
-            var closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: (structure) => structure.hits < structure.hitsMax && structure.structureType != STRUCTURE_WALL
-                });
-            if(closestDamagedStructure) {
-                tower.repair(closestDamagedStructure)
-                console.log("Tower repaired " + closestDamagedStructure.structureType + " at " + closestDamagedStructure.pos);
-            }
-            */
-
-            
+        
+        // Find all towers, set them to defend room.
+        var towers = _.filter(Game.structures, s => s.structureType == STRUCTURE_TOWER);
+        for (let tower of towers) {
+            tower.defendRoom();
         }
 
+        // Execute given code/roles to all creeps.
         for (let name in Game.creeps) {
             Game.creeps[name].runRole();
         }
@@ -118,7 +94,7 @@ module.exports.loop = function() {
             var newCreepName = Game.spawns.Spawn1.createCustomCreep(energy, 'miner');
         } else if (numberOfLongDistanceHarvesters < min_longDistanceHarvesters) {
             max_creeps = false;
-            var newCreepName = Game.spawns.Spawn1.createLongDistanceHarvester(energy, 2, HOME, 'W66S88', 0);
+            var newCreepName = Game.spawns.Spawn1.createLongDistanceHarvester(energy, 3, HOME, 'W66S88', 0);
         } else if (numberOfTransporters < min_transporters) {
             max_creeps = false;
             var newCreepName = Game.spawns.Spawn1.createTransporter(energy);
