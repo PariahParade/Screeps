@@ -39,6 +39,8 @@ module.exports = function() {
                 body.push(WORK);
             }
             
+            // This might seem counterintuitive because work is 100 each, but
+            // this simply reserves energy for a MOVE part for every work part.
             energy -= 150 * numberOfWorkParts;
             
             var numberOfParts = Math.floor(energy / 100);
@@ -84,9 +86,7 @@ module.exports = function() {
             var body = [];
             
             for (let i = 0; i < numberOfParts; i++) {
-                body.push(CARRY);
-                body.push(CARRY);
-                body.push(MOVE);
+                body.push(CARRY, CARRY, MOVE);
             }
             
             // Create creep with the built body

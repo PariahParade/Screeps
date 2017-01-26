@@ -43,18 +43,22 @@ Creep.prototype.getEnergy =
     function(useContainer, useStorage, ableToHarvest) {
         //Pickup any energy that might be dropped around the creep
         var droppedEnergy = this.pos.findClosestByPath(FIND_DROPPED_ENERGY);
-        console.log(droppedEnergy.energy);
-        if (droppedEnergy > this.energyCapacityAvailable) {
-            useStorage == false;
-            useContainer == false;
-            ableToHarvest == false;
-            if (this.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
-                this.moveTo(droppedEnergy);
-            }
-            else {
-                this.say(droppedEnergy.energy + "nrg")
+        //console.log(droppedEnergy.energy);
+        if (droppedEnergy){
+            if (droppedEnergy.energy > this.energyCapacityAvailable) {
+                //console.log(this.name + " trying to get dropped energy" + droppedEnergy.energy);
+                useStorage == false;
+                useContainer == false;
+                ableToHarvest == false;
+                if (this.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
+                    this.moveTo(droppedEnergy);
+                }
+                else {
+                    this.say(droppedEnergy.energy + "nrg")
+                }
             }
         }
+        
         
         if (useStorage) {
             if (!this.memory.storedStorage) {
@@ -101,9 +105,11 @@ Creep.prototype.getEnergy =
         var droppedEnergy = this.pos.findClosestByPath(FIND_DROPPED_ENERGY);
         //console.log(droppedEnergy);
         if (droppedEnergy) {
-            console.log(this.name + " in nrg");
+            //console.log(this.name + " in nrg");
             if (this.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
                 this.moveTo(droppedEnergy);
+                ableToHarvest = false;
+                //console.log("tryin my best");
             }
             else {
                 this.say(droppedEnergy.energy + "nrg")

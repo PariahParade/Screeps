@@ -46,6 +46,8 @@ var roleBuilder = {
 	            
 	        //}
 	        
+	        //var buildingSites = Game.constructionSites
+	        
 	        var targets = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
             if(targets.length) {
                 if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {

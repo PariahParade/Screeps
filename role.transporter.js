@@ -9,7 +9,7 @@ var roleTransporter = {
 	    }
 	    if(!(creep.memory.fullEnergy) && creep.carry.energy == creep.carryCapacity) {
 	        creep.memory.fullEnergy = true;
-	        creep.memory.dropOffArea = false;
+	        creep.memory.atDropOffArea = false;
 	        creep.memory.targetContainer = null;
 	        creep.memory.storageArea = JSON.stringify(Game.flags.StorageArea.pos);
 	        creep.say('fullEnergy');
@@ -17,31 +17,32 @@ var roleTransporter = {
 
         if(creep.memory.fullEnergy) {
             // We have full energy now, so lets move to storage area flag
-            
-            console.log("flag: " + creep.memory.storageArea);
-            console.log("creep: " + JSON.stringify(creep.pos));
-            if (JSON.stringify(creep.pos) == creep.memory.storageArea && creep.memory.dropOffArea) {
-                console.log("testerson");
-                creep.moveTo(creep.memory.storageArea);
-                creep.say("mv StorageArea");
+            var target = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
+            if (!creep.pos.findInRange(FIND_MY_SPAWNS, 1)) {
+                creep.moveTo(target);    
             }
-            // We've arrived! Find the nearest most empty vessel. Storage > Container
             else {
-                creep.memory.dropOffArea = true;
-
+                creep.memory.atDropOffArea = true;
+            }
+            
+            if (creep.memory.atDropOffArea = true) {
+                // We've arrived! Find the nearest most empty vessel. Storage > Container
+                console.log("blahblah");
+                
                 var targets = creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_STORAGE ||
-                            structure.structureType == STRUCTURE_CONTAINER) && structure.energy < structure.energyCapacity;
+                    return (structure.structureType == STRUCTURE_STORAGE);
                 }
                 });
+                console.log(targets);
+                
                 if(targets.length > 0) {
+                    console.log("maybe dropping things off today");
                     if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(targets[0]);
                         creep.say('Mv ' + targets[0].structureType);
                     }
                 }
-
             }
 	    }
 	    // Need to pick up energy
