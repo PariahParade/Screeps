@@ -8,6 +8,8 @@ StructureTower.prototype.defendRoom =
             else {
                 var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: (structure) => 
+                        // The +200 is that so no energy is wasted; it will only
+                        // repair things that can absorb the full 200 repair
                         ((structure.hits + 200) < structure.hitsMax) 
                         && structure.structureType != STRUCTURE_WALL
                         && structure.structureType != STRUCTURE_RAMPART

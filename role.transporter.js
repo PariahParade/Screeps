@@ -16,54 +16,65 @@ var roleTransporter = {
 	    }
 
         if(creep.memory.fullEnergy) {
-            // We have full energy now, so lets move to storage area flag
-            var target = creep.pos.findClosestByRange(FIND_MY_SPAWNS);
-            if (!creep.pos.findInRange(FIND_MY_SPAWNS, 1)) {
-                creep.moveTo(target);    
-            }
-            else {
-                creep.memory.atDropOffArea = true;
-            }
-            
-            if (creep.memory.atDropOffArea = true) {
-                // We've arrived! Find the nearest most empty vessel. Storage > Container
-                console.log("blahblah");
-                
-                var targets = creep.room.find(FIND_STRUCTURES, {
+            var depositTargets = creep.room.find(FIND_STRUCTURES, {
                 filter: (structure) => {
                     return (structure.structureType == STRUCTURE_STORAGE);
                 }
+            });
+
+            //if(creep.room.storage.store[RESOURCE_ENERGY] == 0) {
+               // replenish the storage!
+            //}
+
+            if (depositTargets.length){
+                console.log("transporter deposit target: " + depositTargets[0]);
+                console.log(JSON.stringify(depositTargets));
+                if (creep.transfer(depositTargets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(depositTargets[0]);
+                }
+            }
+
+            /*
+            if (creep.memory.atDropOffArea = false) {
+                creep.MoveTo(Game.flags.StorageArea);
+            }
+
+            if (creep.memory.atDropOffArea = true) {
+                // We've arrived! Find the nearest most empty vessel. Storage > Container
+                var targets = creep.room.find(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return ((structure.structureType == STRUCTURE_STORAGE
+                        || structure.structureType == STRUCTURE_CONTAINER) && structure.store[RESOURCE_ENERGY] < structure.energyCapacity);
+                }
                 });
-                console.log(targets);
-                
+
                 if(targets.length > 0) {
-                    console.log("maybe dropping things off today");
                     if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                         creep.moveTo(targets[0]);
                         creep.say('Mv ' + targets[0].structureType);
                     }
                 }
             }
+
+            */
+
 	    }
 	    // Need to pick up energy
 	    else {
 	        //Pickup any energy that might be dropped around the creep
 	        var droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 3);
 	        if (droppedEnergy.length > 0) {
-	            console.log("found dropped");
 	            if (creep.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
 	                creep.moveTo(droppedEnergy);
 	            }
 	            else {
-	                console.log(creep.name + "[" + creep.memory.role + "] found " + droppedEnergy[0].energy + " energy to pick up.");
+	                //console.log(creep.name + "[" + creep.memory.role + "] found " + droppedEnergy[0].energy + " energy to pick up.");
 	            }
 	        }
 
 	        // Otherwise move to the most full container and pickup energy
 	        // If creep has no container in memory, grab one
-	        //console.log("test");
 	        if (!creep.memory.targetContainer) {
-	            console.log("In memory");
 	            // Find all containers in the room.
 	            var containers = creep.room.find(FIND_STRUCTURES, {
                     filter: (structure) => structure.structureType == STRUCTURE_CONTAINER
@@ -77,9 +88,7 @@ var roleTransporter = {
 	        // We have a container in memory. Go to it.
 	        else {
 	            if (creep.withdraw(Game.getObjectById(creep.memory.targetContainer), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-	                console.log("in move");
 	                creep.moveTo(Game.getObjectById(creep.memory.targetContainer));
-	                creep.say("get nrg");
 	            }
 	        }
 	    }

@@ -27,13 +27,14 @@ var roleMinimums = {
 
 Creep.prototype.runRole =
     function() {
-        try {
+        //try {
             //console.log(this.name + ": " + this.memory.role);
             roles[this.memory.role].run(this);
-        }
-        catch (err) {
-            console.log("Error in creep.runRole: " + this.memory.role + " errorMsg: "  + err.message);
-        }
+        //}
+        //catch (err) {
+        //    console.log("Error in creep.runRole: " + this.memory.role + " errorMsg: "  + err.message);
+        //    )
+        //}
     }
 
 /** @function
@@ -41,10 +42,12 @@ Creep.prototype.runRole =
     @param {bool} useStorage */
 Creep.prototype.getEnergy =
     function(useContainer, useStorage, ableToHarvest) {
+        var availableEnergy = [];
+        
         //Pickup any energy that might be dropped around the creep
         var droppedEnergy = this.pos.findClosestByPath(FIND_DROPPED_ENERGY);
-        //console.log(droppedEnergy.energy);
         if (droppedEnergy){
+            console.log("droppedEnergy: " + droppedEnergy.energy + " at " + droppedEnergy.pos);
             if (droppedEnergy.energy > this.energyCapacityAvailable) {
                 //console.log(this.name + " trying to get dropped energy" + droppedEnergy.energy);
                 useStorage == false;
