@@ -1,4 +1,5 @@
-//TODO: Evaluate transporter, fix if needed.
+//TODO: Transporter fixed. Need to have it prioritize dropoff based on
+    // energy capacity
 //TODO: getEnergy function confuses creeps, they try to go for every direction
     // Need for them to evaluate what is best. What's most full?
 //TODO: Figure out building in other rooms
@@ -6,7 +7,6 @@
 //TODO: Storage usage
     //Started; need to finish
 //TODO: Have more creeps use prototypes
-//TODO: Refactor Tower
 //TODO: Refactor spawning and clean it up
     // Need to do math on how much energy a room can create and how much I need
     // to exploit that. Maybe make it dynamic.
@@ -77,6 +77,9 @@ module.exports.loop = function() {
         var numberOfLongDistanceHarvesters = _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceHarvester');
 
         var energy = Game.spawns.Spawn1.room.energyCapacityAvailable;
+        if (energy > 1300) {
+            energy = 1300;
+        }
 
         // Priority: Harvesters > Builders > Repairers > Wallers > Upgraders
         if (numberOfHarvesters < min_harvesters) {
@@ -126,7 +129,7 @@ module.exports.loop = function() {
 
 
         //console.log("Max Creeps:" + max_creeps);
-        //diagnostics.countCreeps();
+        diagnostics.countCreeps();
 
     });
 }
