@@ -19,7 +19,7 @@ var roleWaller = {
 	    if(creep.memory.walling) {
 	        if (!creep.memory.wallToRepair) {
 	            var walls = creep.room.find(FIND_STRUCTURES, {
-	                filter: (structure) => structure.structureType == STRUCTURE_WALL && structure.hits < 60000
+	                filter: (structure) => structure.structureType == STRUCTURE_WALL && structure.hits < 100000
 	            });
 	            if (walls.length > 0) {
 	                walls.sort(function(a, b){return a.hits - b.hits});
@@ -58,11 +58,14 @@ var roleWaller = {
 	            console.log(creep.name + "found " + droppedEnergy[0].energy + " energy to pick up.");
 	            creep.pickup(droppedEnergy[0]);
 	        }
-	        
+
 	        // Otherwide move to the nearest container and pickup energy
 	        let container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-	           filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 200 
+	           filter: structure => ((structure.structureType == STRUCTURE_STORAGE  
+                                    || structure.structureType == STRUCTURE_CONTAINER)
+	                                && structure.store[RESOURCE_ENERGY] > 200) 
 	        });
+
 	        if (container) {
 	            if (creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
 	                creep.moveTo(container);

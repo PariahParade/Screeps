@@ -19,6 +19,16 @@ var roleClaimer = {
                 creep.moveTo(roomController);
                 creep.say('mv controller');
             }
+            // Claim if we can
+            else {
+                try {
+                    creep.claimController(roomController)    
+                }
+                catch (err){
+                    
+                }
+                
+            }
         }
     }
 };

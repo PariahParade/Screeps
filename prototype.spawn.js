@@ -57,7 +57,7 @@ module.exports = function() {
                 }
                 roleName = 'harvester';
             } else if (roleName == "miner") {
-                body.push(WORK, WORK, WORK, WORK, WORK, MOVE);
+                body.push(WORK, WORK, WORK, WORK, WORK, CARRY, MOVE, MOVE);
             } else if (roleName == "builder") {
                 body.push(WORK, WORK, CARRY, CARRY, CARRY, MOVE, MOVE, MOVE, MOVE, MOVE);
             } else {
@@ -83,6 +83,56 @@ module.exports = function() {
                 sourceId: sourceId,
                 working: false
             });
+        };
+
+    StructureSpawn.prototype.createLongDistanceBuilder =
+        function(energy, numberOfWorkParts, home, target) {
+            var body = getBalancedCreepBodyPlan(energy, numberOfWorkParts);
+
+            // Create creep with the body built body
+            return this.createCreep(body, undefined, {
+                role: 'longDistanceBuilder',
+                home: home,
+                target: target,
+                working: false
+            });
+        };
+        
+    StructureSpawn.prototype.createGuardian =
+        function(energy, home, target) {
+            var body = [];
+            
+            // Reserve a move for each one of these (add 50 to part cost).
+            var attackParts = (Math.floor(energy / 130)) * .75;
+            var toughParts = Math.floor((energy - (attackParts * 130)) / 60);
+            
+            // Deploy TOUGH first, so these will be attacked first.
+            for (let i = 0; i < toughParts; i++) {
+                body.push(TOUGH);
+            }
+            // Need one move for every tough and attack, so move needs doubled up
+            for (let i = 0; i < toughParts + attackParts; i++) {
+                body.push(MOVE);
+            }
+            for (let i = 0; i < attackParts; i++) {
+                body.push(ATTACK);
+            }
+
+            if(this.canCreateCreep(body) == OK) {
+                return this.createCreep(body, undefined, {
+                    role: 'guardian',
+                    home: home,
+                    target: target
+                });
+            }
+            else {
+                console.log("ERROR creating guardian with " + energy + " energy and the following body:");
+                console.log(body);
+            }
+            
+            
+            // Create creep with the body built body
+            
         };
 
     StructureSpawn.prototype.createClaimer =

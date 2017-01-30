@@ -8,7 +8,9 @@ var roles = {
     scout: require('role.scout'),
     claimer: require('role.claimer'),
     miner: require('role.miner'),
-    transporter: require('role.transporter')
+    transporter: require('role.transporter'),
+    guardian: require('role.guardian'),
+    longDistanceBuilder: require('role.longDistanceBuilder')
 }
 
 /*
@@ -47,7 +49,7 @@ Creep.prototype.getEnergy =
         //Pickup any energy that might be dropped around the creep
         var droppedEnergy = this.pos.findClosestByPath(FIND_DROPPED_ENERGY);
         if (droppedEnergy){
-            console.log("droppedEnergy: " + droppedEnergy.energy + " at " + droppedEnergy.pos);
+            //console.log("droppedEnergy: " + droppedEnergy.energy + " at " + droppedEnergy.pos);
             if (droppedEnergy.energy > this.energyCapacityAvailable) {
                 //console.log(this.name + " trying to get dropped energy" + droppedEnergy.energy);
                 useStorage == false;

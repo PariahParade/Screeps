@@ -22,8 +22,11 @@ var diagnostics = {
             console.log("repairers      : " + _.sum(Game.creeps, (c) => c.memory.role == 'repairer'));
             console.log("wallers        : " + _.sum(Game.creeps, (c) => c.memory.role == 'waller'));
             console.log("miners         : " + _.sum(Game.creeps, (c) => c.memory.role == 'miner'));
+            console.log("claimers       : " + _.sum(Game.creeps, (c) => c.memory.role == 'claimer'));
             console.log("transporters   : " + _.sum(Game.creeps, (c) => c.memory.role == 'transporter'));
-            console.log("longdistance   : " + _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceHarvester'));
+            console.log("guardians      : " + _.sum(Game.creeps, (c) => c.memory.role == 'guardian'));
+            console.log("LD Harvester   : " + _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceHarvester'));
+            console.log("LD Builder     : " + _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceBuilder'));
             console.log("---------------------------------------------");
         }
         

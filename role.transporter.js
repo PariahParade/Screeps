@@ -27,8 +27,8 @@ var roleTransporter = {
             //}
 
             if (depositTargets.length){
-                console.log("transporter deposit target: " + depositTargets[0]);
-                console.log(JSON.stringify(depositTargets));
+                //console.log("transporter deposit target: " + depositTargets[0]);
+               // console.log(JSON.stringify(depositTargets));
                 if (creep.transfer(depositTargets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                     creep.moveTo(depositTargets[0]);
                 }
@@ -64,11 +64,14 @@ var roleTransporter = {
 	        //Pickup any energy that might be dropped around the creep
 	        var droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 3);
 	        if (droppedEnergy.length > 0) {
+	            
 	            if (creep.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
-	                creep.moveTo(droppedEnergy);
+	                //console.log(creep.name + " tryin to get dropped energy");
+	                creep.moveTo(droppedEnergy[0]);
 	            }
 	            else {
-	                //console.log(creep.name + "[" + creep.memory.role + "] found " + droppedEnergy[0].energy + " energy to pick up.");
+	                creep.moveTo(droppedEnergy);
+	                console.log(creep.name + "[" + creep.memory.role + "] found " + droppedEnergy[0].energy + " energy to pick up.");
 	            }
 	        }
 
@@ -88,6 +91,7 @@ var roleTransporter = {
 	        // We have a container in memory. Go to it.
 	        else {
 	            if (creep.withdraw(Game.getObjectById(creep.memory.targetContainer), RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+	                //console.log(creep.name + "[transporter] moving to container");
 	                creep.moveTo(Game.getObjectById(creep.memory.targetContainer));
 	            }
 	        }

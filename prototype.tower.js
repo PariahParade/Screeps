@@ -6,6 +6,14 @@ StructureTower.prototype.defendRoom =
                 this.attack(closestHostile);
             }
             else {
+                var closestInjuredCreep = this.pos.findClosestByRange(FIND_MY_CREEPS, {
+                    filter: (creep) => creep.hits < creep.hitsMax
+                });
+                //console.log(closestInjuredCreep);
+                if (closestInjuredCreep){
+                    this.heal(closestInjuredCreep);
+                }
+                
                 var closestDamagedStructure = this.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: (structure) => 
                         // The +200 is that so no energy is wasted; it will only

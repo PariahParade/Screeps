@@ -41,40 +41,35 @@ var roleMiner = {
             }
             */
             
-            
-	        
-	       
-            
-            /*
-            var source = creep.pos.findClosestByPath(FIND_SOURCES,{filter: (s) => s.id == creep.memory.miningNode});
-	        if (!creep.pos.isEqualTo(container)) {
-	            //console.log(creep.name + " moving to container: " + container.id + " at " + container.pos + ". My pos: " + creep.pos);
-	            creep.moveTo(container);
-	        }
-	        */
 	       
 	       var container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                    filter: (structure) => {
+                   filter: (structure) => {
                         return (structure.structureType == STRUCTURE_CONTAINER);
                     }
             });
 	        
 	        var source = creep.pos.findClosestByPath(FIND_SOURCES,{filter: (s) => s.id == creep.memory.miningNode});
-            if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
-                console.log(creep.name + " moving to source: " + source.id);
-                creep.moveTo(source);
+	        //console.log(creep.name + "'s source: " + source);
+            if (creep.harvest(Game.getObjectById(creep.memory.miningNode)) == ERR_NOT_IN_RANGE) {
+                console.log(creep.name + " moving to source: " + creep.memory.miningNode);
+                creep.moveTo(Game.getObjectById(creep.memory.miningNode));
             }
 	        else {
+	            var link = creep.pos.findInRange(STRUCTURE_LINK, 2);
+	            if (link) {
+	                console.log(creep.name + ' link: ' + link);
+	                creep.transfer(link, RESOURCE_ENERGY);
+	                console.log(creep.name + " transferred energy to link");
+	            }
+	            //console.log(creep.name + "not here");
 	            // TODO: stopgap. Fix this later.
-	            creep.moveTo(container);
-                try{
-                    //console.log(creep.name + " mining");
-                    var errorCode = creep.transfer(container, RESOURCE_ENERGY);
-                    //console.log(errorCode);
-                }
-                catch(err) {
-                    console.log("Error: Miner not in range of container? Error Code: " + err.message)
-                }
+	            //creep.moveTo(container);
+                //try{
+                //    var errorCode = creep.transfer(container, RESOURCE_ENERGY);
+                //}
+                //catch(err) {
+                //    console.log("Error: Miner not in range of container? Error Code: " + err.message)
+                //}
             }
         } // End creep.memory.mining
 	} // End run

@@ -22,15 +22,19 @@ require('prototype.tower');
 const profiler = require('screeps-profiler');
 const diagnostics = require('diagnostics');
 
-var min_harvesters = 3;
-var min_builders = 2;
+var diagnosticeSpam = true;
+
+var min_harvesters = 2;
+var min_builders = 1;
 var min_repairers = 1;
 var min_wallers = 1;
-var min_upgraders = 3;
+var min_upgraders = 2;
 var min_miners = 2;
 var min_transporters = 1;
-var min_claimers = 1;
+var min_claimers = 0;
 var min_longDistanceHarvesters = 2;
+var min_guardians = 1;
+var min_longDistanceBuilders = 2;
 
 var HOME = Game.spawns.Spawn1.room.name;
 var max_creeps = false;
@@ -47,6 +51,15 @@ module.exports.loop = function() {
                 delete Memory.creeps[name];
             }
         }
+        
+        // Transfer link resources if full
+        var linkFrom = Game.getObjectById('588aadba6941fe7d4805143a');
+        //console.log("linkFrom: " + linkFrom);
+        var linkTo = Game.getObjectById('588a2cb04c9cd490564d3b63');
+        if (linkFrom.energy < (linkTo.energyCapacity - linkTo.energy)) {
+            linkFrom.transferEnergy(linkTo);
+        }
+        
         
         // Find all towers, set them to defend room.
         var towers = _.filter(Game.structures, s => s.structureType == STRUCTURE_TOWER);
@@ -74,7 +87,9 @@ module.exports.loop = function() {
         var numberOfMiners = _.sum(Game.creeps, (c) => c.memory.role == 'miner');
         var numberOfTransporters = _.sum(Game.creeps, (c) => c.memory.role == 'transporter');
         var numberOfClaimers = _.sum(Game.creeps, (c) => c.memory.role == 'claimer');
+        var numberOfGuardians = _.sum(Game.creeps, (c) => c.memory.role == 'guardian');
         var numberOfLongDistanceHarvesters = _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceHarvester');
+        var numberOfLongDistanceBuilders = _.sum(Game.creeps, (c) => c.memory.role == 'longDistanceBuilder');
 
         var energy = Game.spawns.Spawn1.room.energyCapacityAvailable;
         if (energy > 1300) {
@@ -97,13 +112,13 @@ module.exports.loop = function() {
             var newCreepName = Game.spawns.Spawn1.createCustomCreep(energy, 'miner');
         } else if (numberOfLongDistanceHarvesters < min_longDistanceHarvesters) {
             max_creeps = false;
-            var newCreepName = Game.spawns.Spawn1.createLongDistanceHarvester(energy, 3, HOME, 'W66S88', 0);
+            var newCreepName = Game.spawns.Spawn1.createLongDistanceHarvester(energy, 3, HOME, 'W65S89', 0);
         } else if (numberOfTransporters < min_transporters) {
             max_creeps = false;
             var newCreepName = Game.spawns.Spawn1.createTransporter(energy);
         } else if (numberOfClaimers < min_claimers) {
             max_creeps = false;
-            var newCreepName = Game.spawns.Spawn1.createClaimer(energy, HOME, 'W66S88');
+            var newCreepName = Game.spawns.Spawn1.createClaimer(energy, HOME, 'W65S89');
         } else if (numberOfBuilders < min_builders) {
             max_creeps = false;
             var newCreepName = Game.spawns.Spawn1.createCustomCreep(energy, 'builder');
@@ -111,6 +126,14 @@ module.exports.loop = function() {
         } else if (numberOfRepairers < min_repairers) {
             max_creeps = false;
             var newCreepName = Game.spawns.Spawn1.createCustomCreep(energy, 'repairer');
+            //console.log("Spawned new creep. Name=\"" + name + "\" Role: repairer")
+        } else if (numberOfLongDistanceBuilders < min_longDistanceBuilders) {
+            max_creeps = false;
+            var newCreepName = Game.spawns.Spawn1.createLongDistanceBuilder(energy, 3, HOME, 'W65S89');
+            //console.log("Spawned new creep. Name=\"" + name + "\" Role: repairer")
+        } else if (numberOfGuardians < min_guardians) {
+            max_creeps = false;
+            var newCreepName = Game.spawns.Spawn1.createGuardian(energy, HOME, 'W65S89');
             //console.log("Spawned new creep. Name=\"" + name + "\" Role: repairer")
         } else if (numberOfWallers < min_wallers) {
             max_creeps = false;
@@ -126,10 +149,8 @@ module.exports.loop = function() {
             max_creeps = true;
         }
 
-
-
-        //console.log("Max Creeps:" + max_creeps);
-        diagnostics.countCreeps();
-
+        if (diagnosticeSpam) {
+            diagnostics.countCreeps();
+        }
     });
 }

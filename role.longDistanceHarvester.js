@@ -12,7 +12,7 @@ var roleLongDistanceHarvester = {
 	        creep.say('working');
 	    }
         
-        if(creep.memory.working) {
+        if(creep.memory.working == true) {
             // Energy is full. If we're home, lets drop off our stuff
             if (creep.room.name == creep.memory.home) {
                 var targetStorage = creep.room.find(FIND_STRUCTURES, {
@@ -40,14 +40,22 @@ var roleLongDistanceHarvester = {
 	            //Pickup any energy that might be dropped around the creep
                 var droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
                 if (droppedEnergy.length) {
-                    //console.log(this.name + "found " + droppedEnergy[0].energy + " energy to pick up.");
                     creep.say(droppedEnergy[0].energy + "nrg")
                     creep.pickup(droppedEnergy[0]);
                 }
+
+                // If we don't have a source in our memory, get one.
+	            if (!(creep.memory.sourceId) || creep.memory.sourceId == '0') {
+	                var sources = creep.room.find(FIND_SOURCES);
+	                
+	                // Get a random number so that we get sent to a random source.
+	                var randomSource = Math.floor(Math.random() * (sources.length));
+	                creep.memory.sourceId = sources[randomSource].id;
+	            }
 	            
-	            var source = creep.room.find(FIND_SOURCES)[creep.memory.sourceId];
-    	        if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
-    	            creep.moveTo(source);
+	            //var source = creep.room.find(FIND_SOURCES)[creep.memory.sourceId];
+    	        if (creep.harvest(Game.getObjectById(creep.memory.sourceId)) == ERR_NOT_IN_RANGE) {
+    	            creep.moveTo(Game.getObjectById(creep.memory.sourceId));
     	            creep.say("mv target");
     	        }
 	        }
