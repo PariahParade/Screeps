@@ -7,46 +7,62 @@ var roleRepairer = {
 
 	    if(creep.memory.repairing && creep.carry.energy == 0) {
             creep.memory.repairing = false;
+            creep.memory.repairTarget = '';
             creep.say('harvesting');
 	    }
 	    if(!creep.memory.repairing && creep.carry.energy == creep.carryCapacity) {
 	        creep.memory.repairing = true;
 	        creep.say('repairing');
-	        //console.log(creep.name + " is repairing");
 	    }
 
 	    if(creep.memory.repairing) {
-	        var closestDamagedStructure = creep.pos.findClosestByRange(FIND_STRUCTURES, {
-                filter: (structure) => structure.hits < structure.hitsMax && structure.structureType != STRUCTURE_WALL
+	        if (!creep.memory.repairTarget || creep.memory.repairTarget == '') {
+	            // || Game.getObjectById(creep.memory.repairTarget).hits == Game.getObjectById(creep.memory.repairTarget).hitsMax
+	            
+	            var damagedStructures = creep.room.find(FIND_STRUCTURES, {
+                    filter: (structure) => structure.hits < structure.hitsMax //&&
+                        //structure.hits < 1500000 //&& 
+                        //structure.structureType != STRUCTURE_WALL &&
+                        //structure.structureType != STRUCTURE_RAMPART
                 });
-            if(closestDamagedStructure) {
-                if (creep.repair(closestDamagedStructure) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(closestDamagedStructure);
+                
+                var priorityRepairs = _.filter(damagedStructures, s => s.structureType != STRUCTURE_WALL && s.structureType != STRUCTURE_RAMPART);
+                var wallsAndRamparts = _.filter(damagedStructures, s => s.structureType === STRUCTURE_WALL || s.structureType === STRUCTURE_RAMPART);
+                
+                //console.log(JSON.stringify(priorityRepairs));
+                
+                if (priorityRepairs.length > 0) {
+                    priorityRepairs.sort(function (a,b) {return ((a.hits/a.hitsMax) - (b.hits/b.hitsMax))});
+                    creep.memory.repairTarget = priorityRepairs[0].id;
                 }
-            }
-            else {
-                //creep.say("->Builder");
+                else if (wallsAndRamparts.length > 0) {
+                    wallsAndRamparts.sort(function (a,b) {return ((a.hits/a.hitsMax) - (b.hits/b.hitsMax))});
+                    creep.memory.repairTarget = wallsAndRamparts[0].id;
+                }
+                else { // nothing to repair
+                    creep.memory.repairTarget = '';
+                }
+	        }
+	        else {
+	            let repairTarget = Game.getObjectById(creep.memory.repairTarget);
+	            if (creep.repair(repairTarget) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(repairTarget, {maxRooms: 1});
+                    creep.say('repairing');
+                }
+                else {
+                    if (repairTarget.hits == repairTarget.hitsMax) {
+                        creep.memory.repairTarget = '';
+                    }
+                }
+	        }
+	        
+	        // Nothing to repair. Build if you can. Build falls thru to upgrader.
+            if (creep.memory.repairTarget == '') {
                 roleBuilder.run(creep);
             }
 	    }
 	    else {
-	        //Pickup any energy that might be dropped around the creep
-	        var droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
-	        if (droppedEnergy.length) {
-	            console.log(creep.name + "found " + droppedEnergy[0].energy + " energy to pick up.");
-	            creep.pickup(droppedEnergy[0]);
-	        }
-	        
-	        // Otherwide move to the nearest container and pickup energy
-	        let container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-	           filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 0 
-	        });
-	        if (container) {
-	            if (creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-	                creep.moveTo(container);
-	                creep.say("pickup nrg");
-	            }
-	        }
+	        creep.getEnergy(true, true, true, false);
 	    }
 	}
 };

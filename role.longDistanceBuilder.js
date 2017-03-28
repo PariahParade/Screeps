@@ -1,4 +1,4 @@
-var roleLongDistanceHarvester = require('role.longDistanceHarvester');
+var roleRepairer = require('role.repairer');
 
 var roleLongDistanceBuilder = {
 
@@ -20,49 +20,68 @@ var roleLongDistanceBuilder = {
                 var spawnInQueue = false;
                 var spawn;
 	            var targets = creep.room.find(FIND_CONSTRUCTION_SITES);
-                if(targets.length) {
-                    for (let target in targets) {
+	            /*
+	            var newSpawn = creep.room.find(FIND_MY_CONSTRUCTION_SITES, {
+                   filter: (structure) => {
+                       return (structure.structureType == STRUCTURE_SPAWN);
+                   } 
+                });
+	            
+	            if (newSpawn.length > 0) {
+	                if (creep.build(newSpawn[0]) == ERR_NOT_IN_RANGE) {
+                        //console.log('build?');
+                        creep.moveTo(newSpawn[0], {reusePath: 15});
+                    }
+	            }
+	            */
+	            
+	            
+	            if (targets.length > 0) {
+	                for (let target in targets) {
                         if (target.structureType == STRUCTURE_SPAWN) {
                             spawnInQueue = true;
                             spawn = target;
                         }
                     }
-                    console.log(spawninQueue);
                     if (spawnInQueue) {
                         if(creep.build(spawn) == ERR_NOT_IN_RANGE) {
                             console.log('moving to spawn to build');
-                            creep.moveTo(spawn);
+                            creep.moveTo(spawn, {reusePath: 15});
                         }
                     }
                     else {
                         if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                            creep.moveTo(targets[0]);
+                            //console.log(creep.name);
+                            creep.moveTo(targets[0], {reusePath: 15, maxRooms: 1});
                         }
                     }
-                    
-                }
-                else {
-                   //console.log("Nothing to build so " + creep.name + " is becoming a longDistanceHarvester");
-                    //roleLongDistanceHarvester.run(creep);
-                }
+	            }
+	            else {
+	                roleRepairer.run(creep);
+	            }
 	        }
 	        else {
-	            var exit = creep.room.findExitTo(creep.memory.target);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-                creep.say("chg rooms");
+	            var errnum = creep.moveTo(Game.flags[creep.memory.target]);
+                //console.log(creep.name + ' ' + errnum);
 	        }
         }
         // Not working--Need Energy
 	    else {
 	        if (creep.room.name == creep.memory.home) {
-	            creep.getEnergy(true, true, false);
+	            //console.log(creep.name + " " + 'test');
+	            creep.getEnergy(true, true, false, false);
 	        }
 	        else {
-	            var exit = creep.room.findExitTo(creep.memory.home);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-                creep.say("need nrg");
+	            creep.getEnergy(true, true, true, false);
+	            /*
+	            var source = creep.pos.findClosestByPath(FIND_SOURCES);
+	            if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
+	                creep.moveTo(source);
+	                creep.say("mv source");
+	            }
+	            */
 	        }
-	    }
+	    }// End Need Energy
 	}
 };
 

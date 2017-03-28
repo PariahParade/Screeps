@@ -1,4 +1,5 @@
 var roleUpgrader = require('role.upgrader');
+var roleWaller = require('role.waller');
 
 var roleBuilder = {
 
@@ -15,81 +16,35 @@ var roleBuilder = {
 	    }
 
 	    if(creep.memory.building) {
-	        /*
-	        var targets = [];
-	        for (let sites in Game.constructionSites) { 
-	            targets.push(Game.getObjectById(sites))
-	        };
-	        //console.log(targets);
-	        if (targets.length) {
-	            if(creep.build(Game.getObjectById(targets[0])) == ERR_NOT_IN_RANGE) {
-	                // If we're not in the right room, we need to move there.
-	                if (creep.room == targets.pos.room) {
-	                    console.log("if; Creep room: " + cree.room.name + " target room: " + targets.pos.room);
-	                }
-	                else {
-	                    console.log("else; Creep room: " + cree.room.name + " target room: " + targets.pos.room);
-	                }
-	                
-                    creep.moveTo(targets[0]);
-                    //creep.say(targets[0].structureType + " " + targets[0].progress + "/" + targets[0].progressTotal);
-                }
-	        }
-	        else {
-	            //console.log(targets);
-                //console.log("Nothing to build so " + creep.name + " is upgrading");
-                roleUpgrader.run(creep);
-            }
-	        */
 	        
-	        //for (var thisRoom in Game.rooms) {
-	            
-	        //}
-	        
-	        //var buildingSites = Game.constructionSites
-	        
-	        var targets = creep.room.find(FIND_MY_CONSTRUCTION_SITES);
+	        var targets = creep.room.find(FIND_CONSTRUCTION_SITES);//, {
+            
             if(targets.length) {
                 if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
-                    //creep.say(targets[0].structureType + " " + targets[0].progress + "/" + targets[0].progressTotal);
+                    creep.moveTo(targets[0], {maxRooms: 1});
                 }
             }
             else {
-                console.log("Nothing to build so " + creep.name + " is upgrading");
+                //creep.say('upgrader');
                 roleUpgrader.run(creep);
             }
             
 	    }
 	    else {
-	        //Pickup any energy that might be dropped around the creep
-	        var droppedEnergy = creep.pos.findInRange(FIND_DROPPED_ENERGY, 1);
-	        if (droppedEnergy.length) {
-	            console.log(creep.name + "found " + droppedEnergy[0].energy + " energy to pick up.");
-	            creep.pickup(droppedEnergy[0]);
+	        var targets = creep.room.find(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return ((structure.structureType == STRUCTURE_STORAGE ||
+                            structure.structureType == STRUCTURE_CONTAINER) && structure.store[RESOURCE_ENERGY] > 50);
+                }
+            });
+	        if (targets.length > 0){
+	            creep.getEnergy(true, true, false, false);
+	        }
+	        else {
+	            creep.getEnergy(true, true, true, false);
 	        }
 	        
-	        // Otherwide move to the nearest container and pickup energy
-	        let container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-	           filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 50 
-	        });
-	        if (container) {
-	            if (creep.withdraw(container, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-	                creep.moveTo(container);
-	                creep.say("build nrg");
-	            }
-	        }
 	    }
-	    /*
-	    else {
-	        
-	        
-	        var sources = creep.room.find(FIND_SOURCES);
-            if(creep.harvest(sources[0]) == ERR_NOT_IN_RANGE) {
-                creep.moveTo(sources[0]);
-            }
-	    }
-	    */
 	}
 };
 

@@ -14,36 +14,38 @@ var roleHarvester = {
 	    }
         
         if(creep.memory.working) {
-	        var targets = creep.room.find(FIND_STRUCTURES, {
+	        var targets = creep.room.find(FIND_MY_STRUCTURES, {
                 filter: (structure) => {
-                    return (structure.structureType == STRUCTURE_EXTENSION ||
-                            structure.structureType == STRUCTURE_SPAWN ||
-                            structure.structureType == STRUCTURE_TOWER ||
-                            structure.structureType == STRUCTURE_STORAGE) && structure.energy < structure.energyCapacity;
+                    return ((structure.structureType == STRUCTURE_SPAWN ||
+                            structure.structureType == STRUCTURE_EXTENSION) && structure.energy < structure.energyCapacity);
                 }
             });
             if(targets.length > 0) {
                 if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(targets[0]);
-                    creep.say('Mv ' + targets[0].structureType);
+                    creep.moveTo(targets[0], {noPathFinding: true})
+                
+                    // Perform pathfinding only if we have enough CPU
+                    if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+                        creep.moveTo(targets[0]);
+                    }
+                }
+            }
+            else if (creep.room.storage) { // If there is storage in the room
+                if(creep.transfer(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(creep.room.storage);
+                    creep.say('Mv storage');
                 }
             }
             else {
-                console.log(creep.name + " is idle. Too many harvesters?");
-                //roleBuilder.run(creep);
+                //console.log(creep.name + " is idle. Too many harvesters?");
+                creep.memory.building = true;
+                roleBuilder.run(creep);
             }
+            
+            
 	    }
 	    else {
-	        creep.getEnergy(true, true, true);
-	        /*
-	        else {
-	            // Backup in case miners die for some reason
-	            var source = creep.pos.findClosestByPath(FIND_SOURCES);
-    	        if (creep.harvest(source) == ERR_NOT_IN_RANGE) {
-    	            creep.moveTo(source);
-    	        }
-	        }
-	        */
+	        creep.getEnergy(true, false, true, false);
 	    }
 	}
 };

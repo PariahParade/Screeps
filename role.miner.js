@@ -2,76 +2,117 @@ var roleMiner = {
 
     run: function(creep) {
 
-	    if(!(creep.memory.mining) && creep.carry.energy == 0) {
+        // If room level is below 3, we have to move stuff back to spawn/ext
+        /*
+        if (!creep.memory.harvester) {
+            if (creep.room.controller.level < 3) {
+                creep.memory.harvester = true;
+            }
+            else {
+                creep.memory.harvester = false;
+            }
+        }
+*/
+        if(!(creep.memory.mining) && creep.carry.energy == 0) {
             creep.memory.mining = true;
             creep.say('I mine gud');
-            //console.log("test2");
 	    }
 	    
-	    if(creep.memory.mining) {
-	        creep.say('mine');
+        if(creep.memory.mining && creep.memory.harvester && creep.carry.energy == creep.carryCapacity) {
+            creep.memory.mining = false;
+            //creep.memory.inPosition = false;
+            creep.say('Delivery');
+        }
+	    
+        //This will effectively cause another miner to spawn, as the spawn
+        //engine totals based on how many of a role have their name as
+        //sourceSpawn
+        if (creep.ticksToLive <= 60) {
+            creep.memory.sourceSpawn = '';
+        }
+	    
+        if(creep.memory.mining) {
+            creep.say('mine');
 	        
-	        //If the creep doesn't have a node assigned, find an unclaimed node.
-	        if(!creep.memory.miningNode){
+            //If the creep doesn't have a node assigned, find an unclaimed node.
+            if(!creep.memory.miningNode){
                 var sources = creep.room.find(FIND_SOURCES);
                 var check=[];
                 // Loop through every source. If the id matches a source that a creep has in memory, filter it out
                 sources.forEach(function(srs){
                     var tmp = creep.room.find(FIND_MY_CREEPS, {filter: (s) => s.memory.miningNode == srs.id && s.memory.role == 'miner'})
-                    //console.log("srs: " + srs.id);
-                    //console.log("tmp: " + tmp);
+
                     if(tmp == ''){
-                        //console.log("in if");
                         creep.memory.miningNode = srs.id;
-                        
                     }
                 });
             }
             
+            let miningNode = Game.getObjectById(creep.memory.miningNode);
             
-            // Diagnostic to find reserved nodes
-            /*
-            var reservedNodes = [];
-            for(var name in Game.creeps) {
-                var creepScanned = Game.creeps[name];
-                if(creepScanned.memory.miningNode != null && creepScanned.memory.role == 'miner') {
-                    //reservedNodes.push(creepScanned.memory.miningNode);
-                    console.log(creepScanned.name + "'s miningNode: " + creepScanned.memory.miningNode);
+            if (creep.harvest(miningNode) == ERR_NOT_IN_RANGE) {
+                //console.log(creep.name + " moving to source: " + miningNode);
+                creep.moveTo(miningNode);
+            }
+            else {  
+                // Once in range and mining, we should drop off our resources
+                // To nearby links or containers.
+                //console.log(creep.name + ' ' + _.sum(creep.carry));
+                if (_.sum(creep.carry) >= 40) {
+                    
+                    // Check if we have a link/container memorized
+                    if (!creep.memory.dropOffId) {
+                        
+                        // Find a link/container near us
+                        let dropOff = creep.pos.findInRange(FIND_STRUCTURES, 1, {
+                           filter: structure => structure.energy < structure.energyCapacity || _.sum(structure.store) < structure.storeCapacity
+                        });
+                        
+                        var links = _.filter(dropOff, s => s.structureType === STRUCTURE_LINK);
+                        
+                        // If it exists, memorize it. Favor links.
+                        if (links.length > 0) {
+                            creep.memory.dropOffId = links[0].id;
+                        }
+                        else if (dropOff.length > 0) {
+                            creep.memory.dropOffId = dropOff[0].id;
+                        }
+                        //No link/container. Don't run this find/check again.
+                        else { 
+                            creep.memory.dropOffId = 'nothing';
+                        }
+                    }
+                    // We have a link memorized, drop off the resources
+                    else {
+                        var errnum = creep.transfer(Game.getObjectById(creep.memory.dropOffId), RESOURCE_ENERGY)
+                        if (errnum == ERR_FULL) {
+                            creep.memory.dropOffId = '';
+                        }
+                    }
+                }
+            } //End harvest-in-range
+        } // End mining = true
+        // We're in the early stages of a room, and the miner needs to bring energy back.
+        // Miners are never harvesters. Evaluate whether to delete this
+        else { 
+            var targets = creep.room.find(FIND_STRUCTURES, {
+                filter: (structure) => {
+                    return ((structure.structureType == STRUCTURE_SPAWN ||
+                            structure.structureType == STRUCTURE_EXTENSION) && structure.energy < structure.energyCapacity);
+                }
+            });
+            if(targets.length > 0) {
+                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+                    creep.moveTo(targets[0], {noPathFinding: true})
+                
+                    // Perform pathfinding only if we have enough CPU
+                    if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+                        creep.moveTo(targets[0]);
+                    }
                 }
             }
-            */
-            
-	       
-	       var container = creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                   filter: (structure) => {
-                        return (structure.structureType == STRUCTURE_CONTAINER);
-                    }
-            });
-	        
-	        var source = creep.pos.findClosestByPath(FIND_SOURCES,{filter: (s) => s.id == creep.memory.miningNode});
-	        //console.log(creep.name + "'s source: " + source);
-            if (creep.harvest(Game.getObjectById(creep.memory.miningNode)) == ERR_NOT_IN_RANGE) {
-                console.log(creep.name + " moving to source: " + creep.memory.miningNode);
-                creep.moveTo(Game.getObjectById(creep.memory.miningNode));
-            }
-	        else {
-	            var link = creep.pos.findInRange(STRUCTURE_LINK, 2);
-	            if (link) {
-	                console.log(creep.name + ' link: ' + link);
-	                creep.transfer(link, RESOURCE_ENERGY);
-	                console.log(creep.name + " transferred energy to link");
-	            }
-	            //console.log(creep.name + "not here");
-	            // TODO: stopgap. Fix this later.
-	            //creep.moveTo(container);
-                //try{
-                //    var errorCode = creep.transfer(container, RESOURCE_ENERGY);
-                //}
-                //catch(err) {
-                //    console.log("Error: Miner not in range of container? Error Code: " + err.message)
-                //}
-            }
-        } // End creep.memory.mining
+        }
+        
 	} // End run
 };
 

@@ -3,6 +3,7 @@ var roleGuardian = {
     /** @param {Creep} creep **/
     run: function(creep) {
         var underAttack = false;
+        
         var enemies = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
         if (enemies) {
             underAttack = true;
@@ -11,22 +12,51 @@ var roleGuardian = {
         
         // If we're in the target room, start defense.
         if (creep.room.name == creep.memory.target) {
-            if (!underAttack) {
-                creep.moveTo(Game.flags.GuardianPoint);
-                creep.say("Defending", 1);
+            if (creep.pos.isEqualTo(Game.flags.GuardianPoint1)) {
+                creep.memory.inPosition = true;
             }
-            // We're under attack! Attack closest dudefella.
+            else if (creep.pos.isEqualTo(Game.flags.GuardianPoint2)) {
+                creep.memory.inPosition = true;
+            }
+            
+            if (!(creep.memory.inPosition) || creep.memory.inPosition == '') {
+                var found = creep.room.lookForAt(LOOK_CREEPS, Game.flags.GuardianPoint1);
+                //console.log(found);
+                if(found.length == 0) {
+                    creep.moveTo(Game.flags.GuardianPoint1);
+                    //console.log(creep.name + ' guardian1');
+                }
+                else {
+                    found = creep.room.lookForAt(LOOK_CREEPS, Game.flags.GuardianPoint2);
+                    if (found.length == 0) {
+                        creep.moveTo(Game.flags.GuardianPoint2);
+                        //console.log(creep.name + ' guardian2');
+                    }
+                }
+                
+                // If we're not in position, we're an active defender, hunt shit down.
+                let hostile = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+                if(hostile) {
+                    if(creep.attack(hostile) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(hostile);
+                        console.log(creep.name + ' hostile');
+                    }
+                }
+                
+                
+            }
             else {
-                creep.say("Kill tgt", 1) 
-                creep.moveTo(enemies);
-                creep.attack(enemies);    
+                creep.say('defend');
+                var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
+                if (target) {
+                    creep.attack(target);
+                }
             }
         }
         // Move to target room
         else {
-            var exit = creep.room.findExitTo(creep.memory.target);
-            creep.moveTo(creep.pos.findClosestByRange(exit));
-            creep.say("mov defens");
+            var errnum = creep.moveTo(Game.flags[creep.memory.target]);
+            //console.log(creep.name + ' ' + errnum);
         }
 	}
 };
