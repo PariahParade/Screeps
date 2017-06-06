@@ -4,11 +4,11 @@ var roleHarvester = {
     /** @param {Creep} creep **/
     run: function(creep) {
         
-        if(creep.memory.working && creep.carry.energy == 0) {
+        if(creep.memory.working && _.sum(creep.carry) == 0) {
             creep.memory.working = false;
             creep.say('get nrg');
 	    }
-	    if(!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+	    if(!creep.memory.working && _.sum(creep.carry) == creep.carryCapacity) {
 	        creep.memory.working = true;
 	        creep.say('working');
 	    }
@@ -20,8 +20,13 @@ var roleHarvester = {
                             structure.structureType == STRUCTURE_EXTENSION) && structure.energy < structure.energyCapacity);
                 }
             });
-            if(targets.length > 0) {
-                if(creep.transfer(targets[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
+            
+            let currentlyCarrying = _.findKey(creep.carry);
+            
+            if(targets.length > 0 && currentlyCarrying == RESOURCE_ENERGY) {
+                var returnCode = creep.transfer(targets[0], currentlyCarrying);
+                
+                if(returnCode == ERR_NOT_IN_RANGE) {
                     creep.moveTo(targets[0], {noPathFinding: true})
                 
                     // Perform pathfinding only if we have enough CPU
@@ -30,10 +35,13 @@ var roleHarvester = {
                     }
                 }
             }
-            else if (creep.room.storage) { // If there is storage in the room
+            else if (creep.room.storage) { // If there is storage in the room, and if carrying something other than energy
                 if(creep.transfer(creep.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(creep.room.storage);
-                    creep.say('Mv storage');
+                    creep.moveTo(creep.room.storage, {noPathFinding: true})
+                    // Perform pathfinding only if we have enough CPU
+                    if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+                        creep.moveTo(creep.room.storage);
+                    }
                 }
             }
             else {
@@ -45,7 +53,7 @@ var roleHarvester = {
             
 	    }
 	    else {
-	        creep.getEnergy(true, false, true, false);
+	        creep.getEnergy(true, true, true, false);
 	    }
 	}
 };

@@ -13,13 +13,13 @@ var roleExtractor = {
 	    
 	    // Carry haul back before dying. 40 is hardcoded to give enough time;
 	    // May need to adjust depending on room. Cached paths will fix this later.
-	    if (creep.ticksToLive < 40 && _.sum(creep.carry) > 10) {
+	    if (creep.ticksToLive < 60 && _.sum(creep.carry) > 10) {
             creep.memory.mining = false;
         }
 	    
 	    
 	    if(creep.memory.mining) {
-	        creep.say('gimme');
+	        //creep.say('gimme');
 	        
 	        //If the creep doesn't have a node assigned, find an unclaimed node.
 	        if(!creep.memory.mineralNode){
@@ -31,7 +31,11 @@ var roleExtractor = {
                 let mineralsLeft = mineralNode.mineralAmount;
                 
                 if (creep.harvest(mineralNode) == ERR_NOT_IN_RANGE) {
-                    creep.moveTo(mineralNode);
+                    creep.moveTo(mineralNode, {reusePath: 10, noPathFinding: true, maxRooms: 1});
+                    // Perform pathfinding only if we have enough CPU
+                    if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+                        creep.moveTo(mineralNode);
+                    }
                 }
             }
 	    }
@@ -40,38 +44,17 @@ var roleExtractor = {
 	        
 	        // Deposit in terminal if it exists, storage if it does not.
 	        var depositTarget = creep.room.terminal
-	        if (!depositTarget || depositTarget.store[currentlyCarrying] >= 10000) {
+	        if (!depositTarget || (depositTarget && _.sum(depositTarget.store) > 250000)) {
 	            depositTarget = creep.room.storage
 	        }
 	        //console.log(depositTarget);
 	        if (creep.transfer(depositTarget, currentlyCarrying) == ERR_NOT_IN_RANGE) {
-	            creep.moveTo(depositTarget);
-            }
-	        
-	        /*
-	        let mineralType = _.findKey(creep.carry);
-	        let mineralFlag = Game.flags[mineralType];
-
-            //console.log(mineralFlag);
-
-            // If there exists a flag for what we're mining
-            if (mineralFlag) {
-                // See if a lab is there
-                var found = creep.room.lookForAt(LOOK_STRUCTURES, mineralFlag);
-                
-                // If there is, and we're in the room that it exists, move there and transfer minerals
-	            if (found.length > 0 && found[0].structureType == STRUCTURE_LAB && Game.flags[mineralType].pos.roomName == creep.pos.roomName) {
-	                 if (creep.transfer(found[0], _.findKey(creep.carry)) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(found[0]);
-                        creep.say('dump mins');
-                    }
-	            }
-	            // If we're not in that room, move there.
-	            else if (mineralFlag.pos.roomName != creep.pos.roomName) {
-	                creep.moveTo(mineralFlag);
+	            creep.moveTo(depositTarget, {reusePath: 10, noPathFinding: true, maxRooms: 1});
+                // Perform pathfinding only if we have enough CPU
+                if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+                    creep.moveTo(depositTarget);
                 }
-	        }
-	        */
+            }
 	    }
 	    
 	} // End run

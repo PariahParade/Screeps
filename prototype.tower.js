@@ -2,7 +2,7 @@ StructureTower.prototype.defendRoom =
     function() {
         try {
             var closestHostile = this.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-            var hostiles = this.room.find(FIND_HOSTILE_CREEPS);
+            //var hostiles = this.room.find(FIND_HOSTILE_CREEPS);
             if (closestHostile) {
                 this.attack(closestHostile);
             }
@@ -14,18 +14,26 @@ StructureTower.prototype.defendRoom =
                     this.heal(closestInjuredCreep);
                 }
                 
+                var towerDelay = true;
+                
+                //if (this.room.name == 'E83N34') {
+                //    towerDelay = false;
+                //}
+                
                 // Slow down rate that towers repair things.
-                if(Game.time % 10 == 0){
+                if (towerDelay == false || Game.time % 5 === 0){
                    var repairTargets = this.room.find(FIND_STRUCTURES, {
                         filter: function(object) {
                             return object.hits < object.hitsMax
                                 && object.hitsMax - object.hits > 1000
-                                && object.hits < 1000000;
+                                && object.hits < 4000000;
                         }
                     });
-                    repairTargets.sort(function (a,b) {return (a.hits - b.hits)});
-                    if (repairTargets.length > 0 && this.energy > 400) {
-                        this.repair(repairTargets[0]);
+                    
+                    let targetToRepair = _.min(repairTargets, 'hits')
+                    
+                    if (targetToRepair && this.energy > 400) {
+                        this.repair(targetToRepair);
                     } 
                 }
             }

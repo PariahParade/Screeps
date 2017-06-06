@@ -1,27 +1,82 @@
-global.ROLE_MINER = 'miner';
-global.ROLE_HAULER = 'hauler';
-global.ROLE_BUILDER = 'builder';
-global.ROLE_CLAIMER = 'claimer';
-global.ROLE_SOLDIER_MELEE = 'soldierMelee';
-global.ROLE_SOLDIER_MEDIC = 'soldierMedic';
-global.ROLE_SCOUT = 'scout';
+global.UPGRADER_PARTS_MAX = 20;
 
-/*
-global.ROLES = {
-    [ROLE_MINER]: require('./role.miner'),
-    [ROLE_CARRIER]: require('./role.carrier'),
-    [ROLE_BUILDER]: require('./role.builder'),
-    [ROLE_CLAIMER]: require('./role.claimer'),
-    [ROLE_SOLDIER_MELEE]: require('./role.soldier_melee'),
-    [ROLE_SOLDIER_MEDIC]: require('./role.soldier_medic'),
-    [ROLE_SCOUT]: require('./role.scout')
-};
-*/
+global.QUARANTINE_ROOMS = [
+    'E83N33',
+    'E82N33',
+    'E84N33'
+]
+
+//-----------RESOURCES, BOOSTS, COMPOUNDS, ETC---------------------------------
+
+//global.CURRENT_REACTION = RESOURCE_CATALYZED_UTRIUM_ACID;     
+global.CURRENT_REACTION = RESOURCE_LEMERGIUM_ALKALIDE;        //LH2O
+//global.CURRENT_REACTION = RESOURCE_GHODIUM_OXIDE;             //GO
+//global.CURRENT_REACTION = RESOURCE_LEMERGIUM_OXIDE;           //LO
+//global.CURRENT_REACTION = RESOURCE_HYDROXIDE;                   //OH
+//global.CURRENT_REACTION = RESOURCE_UTRIUM_HYDRIDE;
+//global.CURRENT_REACTION = RESOURCE_ZYNTHIUM_KEANITE;          //ZK
+//global.CURRENT_REACTION = RESOURCE_GHODIUM;                   //G
+//global.CURRENT_REACTION = RESOURCE_ZYNTHIUM_HYDRIDE;
+//global.CURRENT_REACTION = RESOURCE_ZYNTHIUM_ACID;
+
+
+global.RECIPE_LIST = [
+    RESOURCE_UTRIUM_HYDRIDE,    //UH
+    RESOURCE_HYDROXIDE,         //OH
+    RESOURCE_ZYNTHIUM_KEANITE,  //ZK
+    RESOURCE_UTRIUM_LEMERGITE,  //UL
+    RESOURCE_GHODIUM,           //G
+    RESOURCE_GHODIUM_HYDRIDE    //GH
+]
+
+global.BOOST_COMPOUNDS = [
+    RESOURCE_UTRIUM_HYDRIDE,                //UH
+    RESOURCE_LEMERGIUM_OXIDE,               //LO
+    //RESOURCE_UTRIUM_ACID,                 //UH2O
+    RESOURCE_GHODIUM_OXIDE,                 //GO
+    RESOURCE_CATALYZED_LEMERGIUM_ALKALIDE,  //XLHO2
+    RESOURCE_CATALYZED_UTRIUM_ACID          //XUH2O
+]
+
+global.TERMINAL_RESOURCE_MAX = 40000;
+
+
+// ----------MARKET------------------------------------------------------------
 
 global.MARKET_RESOURCE_MAXIMUM = 10000;
+global.TERMINAL_RESOURCE_EXCESS_MIN = 50000;
 
 
-/**
+// ----------UNICODE CHARACTERS------------------------------------------------
+
+global.UNICODE_PICK = '\u26CF';
+global.UNICODE_TRUCK = '\u26DF';
+global.UNICODE_XBONES = '\u2620';
+global.UNICODE_SWORDS = '\u2694';
+global.UNICODE_BUILDING = '\u26EA';
+
+global.MUSIC_NOTES = [
+    '\u2669',
+    '\u266A',
+    '\u266B',
+    '\u266C'
+]
+
+global.UNICODE_ARROWS = {
+	[TOP]			: "\u2191",
+	[TOP_RIGHT]		: "\u2197",
+	[RIGHT]			: "\u2192",
+	[BOTTOM_RIGHT]	: "\u2198",
+	[BOTTOM]		: "\u2193",
+	[BOTTOM_LEFT]	: "\u2199",	
+	[LEFT]			: "\u2190",	
+	[TOP_LEFT]		: "\u2196"	
+};
+
+
+// ----------BUILDINGS, MIN/MAX/HP, ETC----NONE OF THIS IS IMPLEMENTED YET-----
+
+/** 
  * Contains the maximum hit point amounts that certain structure types should
  * be repaired to. Structure types not listed in this object are repaired to
  * their maximum hit points.
@@ -53,30 +108,17 @@ global.STRUCTURE_TARGET_HITS = {
     }
 };
 
+
+global.RAMPART_UPKEEP	        = RAMPART_DECAY_AMOUNT  / REPAIR_POWER / RAMPART_DECAY_TIME;
+global.ROAD_UPKEEP		        = ROAD_DECAY_AMOUNT     / REPAIR_POWER / ROAD_DECAY_TIME;
+global.CONTAINER_UPKEEP         = CONTAINER_DECAY       / REPAIR_POWER / CONTAINER_DECAY_TIME_OWNED;
+global.REMOTE_CONTAINER_UPKEEP  = CONTAINER_DECAY       / REPAIR_POWER / CONTAINER_DECAY_TIME;
+
 global.TASK_PRIO_TOWER_MAINTENANCE = 0;
 global.TASK_MIN_PRIO_BUILD = 0;
 global.TASK_MIN_PRIO_REPAIR = 0.7;
 global.TASK_MIN_PRIO_UPGRADE = 0.1;
 
-/**
- * A multiplier that is added to task priorities if the task is not in the
- * same room as the creep.
- *
- * @type {number}
- */
-global.TASK_PRIO_ADJACENT_ROOM_MULTIPLIER = 1.5;
-
-/**
- * Contains the maximum amount of assignees that can be assigned to a task of
- * a given type. Task types not listed in this object can have an unlimited
- * amount of assignees.
- *
- * @type {{String, Number}}
- */
-global.TASKS_MAX_ASSIGNEES = {
-    [TASK_BUILD]: 3,
-    [TASK_REPAIR]: 1
-};
 
 /**
  * Only structures whose percentual amount of hit points go below this value

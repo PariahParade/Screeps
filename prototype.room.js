@@ -5,3 +5,4 @@
 Room.prototype.isFriendly = function () {
     return _.has(this, 'controller') && this.controller.my === true;
 };
+

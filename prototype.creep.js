@@ -1,3 +1,5 @@
+require('constants');
+
 var roles = {
     harvester: require('role.harvester'),
     upgrader: require('role.upgrader'),
@@ -5,19 +7,23 @@ var roles = {
     repairer: require('role.repairer'),
     waller: require('role.waller'),
     longDistanceHarvester: require('role.longDistanceHarvester'),
-    scout: require('role.scout'),
     claimer: require('role.claimer'),
     miner: require('role.miner'),
-    transporter: require('role.transporter'),
     guardian: require('role.guardian'),
     longDistanceBuilder: require('role.longDistanceBuilder'),
     soldier: require('role.soldier'),
     fenceguard: require('role.fenceguard'),
     extractor: require('role.extractor'),
-    scout: require('role.scout'),
     hauler: require('role.hauler'),
-    soldier: require('role.soldier')
-}
+    soldier: require('role.soldier'),
+    LDMiner: require('role.LDMiner'),
+    LDHauler: require('role.LDHauler'),
+    scientist: require('role.scientist'),
+    transferer: require('role.transferer'),
+    medic: require('role.medic'),
+    scout: require('role.scout'),
+    SKGuard: require('role.SKGuard')
+} 
 
 /*
 var roleMinimums = {
@@ -44,6 +50,43 @@ Creep.prototype.runRole =
         }
     }
 
+
+Creep.prototype.depositAnything = function(intoTerminal = true) {
+    let currentlyCarrying = _.findKey(this.carry);
+	        
+    // Deposit in terminal if it exists, storage if it does not.
+    var depositTarget = this.room.terminal
+    if (!depositTarget || depositTarget.store[currentlyCarrying] >= TERMINAL_RESOURCE_MAX) {
+        depositTarget = this.room.storage
+    }
+
+    if (this.transfer(depositTarget, currentlyCarrying) == ERR_NOT_IN_RANGE) {
+        this.moveTo(depositTarget, {reusePath: 10, noPathFinding: true, maxRooms: 1});
+        // Perform pathfinding only if we have enough CPU
+        if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+            this.moveTo(depositTarget);
+        }
+    }
+ }
+ 
+Creep.prototype.findMiningNode = function(currentRoom, roleName) {
+    if (currentRoom == undefined) {
+        return;
+    }
+    var sources = currentRoom.find(FIND_SOURCES);
+    var miningNodeId;
+    // Loop through every source. If the id matches a source that a creep has in memory, filter it out
+    sources.forEach(function(srs){
+        var tmp = currentRoom.find(FIND_MY_CREEPS, {filter: (s) => s.memory.miningNode == srs.id && s.memory.role == roleName})
+
+        if(tmp == ''){
+            miningNodeId = srs.id;
+        }
+    });
+    
+    return miningNodeId;
+}
+
 /** @function
     @param {bool} useContainer
     @param {bool} useStorage */
@@ -64,14 +107,15 @@ Creep.prototype.getEnergy =
                 ableToHarvest = false;
                 if(this.withdraw(link[0], RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
                 	//this.moveTo(link[0]);
-                	this.say("mv link");
+                	//this.say("mv link");
                 }
             }
         }
-       
-        if (useStorage) {
+        
+        if (useStorage === true) {
             if (this.room.storage){
-                if (this.room.storage.store[RESOURCE_ENERGY] > 100) {
+                //console.log(this.room.name + ' ' + this.room.storage.store[RESOURCE_ENERGY]);
+                if (this.room.storage.store[RESOURCE_ENERGY] >= (this.carryCapacity - _.sum(this.carry))) {
                     useContainer = false;
                     ableToHarvest = false;
                     if (this.withdraw(this.room.storage, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
@@ -86,22 +130,26 @@ Creep.prototype.getEnergy =
                 }
             }
         }
-
-        if (useContainer) {
+        
+        if (useContainer === true) {
             if (!this.memory.storedContainer || this.memory.storedContainer == '') {
-                let container = this.room.find(FIND_STRUCTURES, {
+                let containers = this.room.find(FIND_STRUCTURES, {
                     filter: structure => structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] > 20
                 });
                 
-                container.sort(function (a,b) {return (b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY])});
+                //container.sort(function (a,b) {return (b.store[RESOURCE_ENERGY] - a.store[RESOURCE_ENERGY])});
+                let fullestContainer = _.max(containers, 'store.energy');
                 
-                if (container.length > 0){
-                    this.memory.storedContainer = container[0].id;                    
+                //console.log(this.name + ' ' + fullestContainer);
+                
+                if (fullestContainer){
+                    this.memory.storedContainer = fullestContainer.id;                    
                 }
                 else {
                     //Logic fall-through: creep will harvest
                 }
-            } else {
+            } 
+            else {
                 let storedContainer = Game.getObjectById(this.memory.storedContainer);
                 
                 if (this.withdraw(storedContainer, RESOURCE_ENERGY) == ERR_NOT_IN_RANGE) {
@@ -111,17 +159,19 @@ Creep.prototype.getEnergy =
                     if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
                         this.moveTo(storedContainer);
                     }
-                    this.say("mv ctnr");
+                    //this.say("mv ctnr");
+                }
+                if (!storedContainer) {
+                    this.memory.storedContainer = '';
                 }
                 // If this container is empty, memorize a new one
-                if (storedContainer.store[RESOURCE_ENERGY] < 20) {
+                if (storedContainer && storedContainer.store[RESOURCE_ENERGY] < 40) {
                     this.memory.storedContainer = '';
                     //console.log(this.name + ' memorizing new container cuz old was empty.');
                 }
             }
         }
-        
-
+       
         if (ableToHarvest) {
             // If we don't have a source in our memory, get one.
             if (!(this.memory.sourceId) || this.memory.sourceId == '0') {
@@ -141,35 +191,35 @@ Creep.prototype.getEnergy =
                     this.moveTo(harvestSource);
                 }
                 
-	            this.say("mv source");
+	            this.say("hrvst");
 	        }
-	        else if(Game.getObjectById(this.memory.sourceId).energy == 0 && Game.getObjectById(this.memory.sourceId).ticksToRegeneration > 20) {
+	        else if(Game.getObjectById(this.memory.sourceId) && Game.getObjectById(this.memory.sourceId).energy == 0 && Game.getObjectById(this.memory.sourceId).ticksToRegeneration > 20) {
 	            this.memory.sourceId = '0';
 	        }
 	        
-	        //Pickup any energy that might be dropped around the creep
-            var droppedEnergy = this.pos.findClosestByRange(FIND_DROPPED_ENERGY, {
-                filter: (droppedEnergy) => {
-                    droppedEnergy.resourceType === RESOURCE_ENERGY &&
-                    droppedEnergy.amount >= 100;
-                }
-            });
+	        //Pickup any resources that might be dropped around the creep
             
-            
-            if (droppedEnergy) {
-                if (this.pickup(droppedEnergy) == ERR_NOT_IN_RANGE) {
-                    this.moveTo(droppedEnergy, {noPathFinding: true})
-                
-                    // Perform pathfinding only if we have enough CPU
-                    if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
-                        this.moveTo(droppedEnergy);
-                    }
-                }
-                else {
-                    this.say(droppedEnergy.energy + "nrg")
-                }
-            }
 	        
         }
         
+        
+        var droppedResource = this.room.find(FIND_DROPPED_RESOURCES);
+        if (droppedResource.length > 0) { //&& droppedResource.amount >= this.carryCapacity - _.sum(this.carry)
+            if (this.pickup(droppedResource[0]) == ERR_NOT_IN_RANGE) {
+                this.moveTo(droppedResource[0], {noPathFinding: true})
+            
+                // Perform pathfinding only if we have enough CPU
+                if(Game.cpu.tickLimit - Game.cpu.getUsed() > 20) {
+                    this.moveTo(droppedResource[0]);
+                }
+            }
+        }
+        
+        let currentlyCarrying = _.findKey(this.carry);
+        if (currentlyCarrying != RESOURCE_ENERGY) {
+            this.depositAnything();
+        }
+        
+        
+    
     };

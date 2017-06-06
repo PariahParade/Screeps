@@ -19,11 +19,12 @@ var roleWaller = {
 	    if(creep.memory.walling) {
 	        if (!creep.memory.wallToRepair) {
 	            var walls = creep.room.find(FIND_STRUCTURES, {
-	                filter: (structure) => structure.structureType == STRUCTURE_WALL && structure.hits < 2000000
+	                filter: (structure) => (structure.structureType == STRUCTURE_WALL || structure.structureType == STRUCTURE_RAMPART) && structure.hits < 3000000
 	            });
 	            if (walls.length > 0) {
-	                walls.sort(function(a, b){return a.hits - b.hits});
-	                creep.memory.wallToRepair = walls[0].id;
+	                var lowestTarget = _.min(walls, 'hits');
+	                //walls.sort(function(a, b){return a.hits - b.hits});
+	                creep.memory.wallToRepair = lowestTarget.id;
 	            }
 	            else {
 	                roleUpgrader.run(creep);
@@ -35,7 +36,7 @@ var roleWaller = {
 	                creep.moveTo(wall);
 	                //console.log("Wall at " + wall.pos + " is being repaired by " + creep.name + ". Hits: " + wall.hits + "/" + wall.hitsMax);
 	            }
-	            
+	            /*
 	            var targets = creep.room.find(FIND_CONSTRUCTION_SITES, {
                     filter: (structure) => 
                         structure.structureType != STRUCTURE_RAMPART
@@ -46,10 +47,11 @@ var roleWaller = {
                         creep.moveTo(targets[0]);
                     }
                 }
+                */
 	        }
 	    }
 	    else {
-	        creep.getEnergy(true, true, true);
+	        creep.getEnergy(true, true, true, false);
 	    }
 	}
 };

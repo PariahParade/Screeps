@@ -5,12 +5,12 @@ var roleRepairer = {
     /** @param {Creep} creep **/
     run: function(creep) {
 
-	    if(creep.memory.repairing && creep.carry.energy == 0) {
+	    if(creep.memory.repairing && _.sum(creep.carry) == 0) {
             creep.memory.repairing = false;
             creep.memory.repairTarget = '';
             creep.say('harvesting');
 	    }
-	    if(!creep.memory.repairing && creep.carry.energy == creep.carryCapacity) {
+	    if(!creep.memory.repairing && _.sum(creep.carry) == creep.carryCapacity) {
 	        creep.memory.repairing = true;
 	        creep.say('repairing');
 	    }
@@ -20,7 +20,8 @@ var roleRepairer = {
 	            // || Game.getObjectById(creep.memory.repairTarget).hits == Game.getObjectById(creep.memory.repairTarget).hitsMax
 	            
 	            var damagedStructures = creep.room.find(FIND_STRUCTURES, {
-                    filter: (structure) => structure.hits < structure.hitsMax //&&
+                    filter: (structure) => structure.hits < structure.hitsMax &&
+                        structure.hitsMax - structure.hits >= REPAIR_POWER * creep.getActiveBodyparts(WORK)
                         //structure.hits < 1500000 //&& 
                         //structure.structureType != STRUCTURE_WALL &&
                         //structure.structureType != STRUCTURE_RAMPART
@@ -32,12 +33,14 @@ var roleRepairer = {
                 //console.log(JSON.stringify(priorityRepairs));
                 
                 if (priorityRepairs.length > 0) {
-                    priorityRepairs.sort(function (a,b) {return ((a.hits/a.hitsMax) - (b.hits/b.hitsMax))});
-                    creep.memory.repairTarget = priorityRepairs[0].id;
+                    let priorityTarget = _.min(priorityRepairs, 'hits');
+                    //priorityRepairs.sort(function (a,b) {return ((a.hits/a.hitsMax) - (b.hits/b.hitsMax))});
+                    creep.memory.repairTarget = priorityTarget.id;
                 }
                 else if (wallsAndRamparts.length > 0) {
-                    wallsAndRamparts.sort(function (a,b) {return ((a.hits/a.hitsMax) - (b.hits/b.hitsMax))});
-                    creep.memory.repairTarget = wallsAndRamparts[0].id;
+                    let otherTarget = _.min(wallsAndRamparts, 'hits');
+                    //wallsAndRamparts.sort(function (a,b) {return ((a.hits/a.hitsMax) - (b.hits/b.hitsMax))});
+                    creep.memory.repairTarget = otherTarget.id;
                 }
                 else { // nothing to repair
                     creep.memory.repairTarget = '';
@@ -62,7 +65,7 @@ var roleRepairer = {
             }
 	    }
 	    else {
-	        creep.getEnergy(true, true, true, false);
+	        creep.getEnergy(true, true, false, false);
 	    }
 	}
 };

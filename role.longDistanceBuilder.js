@@ -5,15 +5,19 @@ var roleLongDistanceBuilder = {
     /** @param {Creep} creep **/
     run: function(creep) {
         
-        if(creep.memory.working && creep.carry.energy == 0) {
+        if (!creep.memory.firstWayPoint) {
+            creep.memory.firstWayPoint = false;
+        }
+        
+        if(creep.memory.working && _.sum(creep.carry) == 0) {
             creep.memory.working = false;
             creep.say('need nrg');
 	    }
-	    if(!creep.memory.working && creep.carry.energy == creep.carryCapacity) {
+	    if(!creep.memory.working && _.sum(creep.carry) == creep.carryCapacity) {
 	        creep.memory.working = true;
 	        creep.say('working');
 	    }
-        
+
         if(creep.memory.working) {
             // If we're in the target room, get building!
             if (creep.room.name == creep.memory.target) {
@@ -36,6 +40,8 @@ var roleLongDistanceBuilder = {
 	            */
 	            
 	            
+	            
+	            
 	            if (targets.length > 0) {
 	                for (let target in targets) {
                         if (target.structureType == STRUCTURE_SPAWN) {
@@ -45,20 +51,45 @@ var roleLongDistanceBuilder = {
                     }
                     if (spawnInQueue) {
                         if(creep.build(spawn) == ERR_NOT_IN_RANGE) {
-                            console.log('moving to spawn to build');
+                            //console.log('moving to spawn to build');
                             creep.moveTo(spawn, {reusePath: 15});
                         }
                     }
                     else {
                         if(creep.build(targets[0]) == ERR_NOT_IN_RANGE) {
                             //console.log(creep.name);
-                            creep.moveTo(targets[0], {reusePath: 15, maxRooms: 1});
+                            creep.moveTo(targets[0], {maxRooms: 1, range: 1});
                         }
                     }
 	            }
+	            // If the room controller is less than 2, lets boost it to two with our energy.
+                else if ((creep.room.controller.level < 2 && creep.room.controller.level > 0 )|| creep.room.controller.ticksToDowngrade < 2000) {
+                    if(creep.upgradeController(creep.room.controller) == ERR_NOT_IN_RANGE) {
+                        creep.moveTo(creep.room.controller, {range: 1});
+                        creep.say("upg ctrl");
+                    }
+                }
 	            else {
 	                roleRepairer.run(creep);
 	            }
+	        }
+	        else if (creep.memory.target == 'E83N34') {
+	            // If target room is spawn 7, use waypoint.
+	            if (!creep.pos.isEqualTo(Game.flags.E84N34) && creep.memory.firstWayPoint === false) {
+                    if (creep.room.name == Game.flags.E84N34.name) {
+                        var errnum = creep.moveTo(Game.flags.E84N34, {maxRooms: 1});
+                    }
+                    else {
+                        var errnum = creep.moveTo(Game.flags.E84N34);    
+                    }
+                }
+                else if (creep.pos.isEqualTo(Game.flags.E84N34)) {
+                    creep.memory.firstWayPoint = true;
+                }
+                
+                if (creep.memory.firstWayPoint === true) {
+                    var errnum = creep.moveTo(Game.flags[creep.memory.target]);
+                }
 	        }
 	        else {
 	            var errnum = creep.moveTo(Game.flags[creep.memory.target]);

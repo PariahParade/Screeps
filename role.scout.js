@@ -1,43 +1,40 @@
-var roleScout = {
+var roleFenceGuard = {
 
     /** @param {Creep} creep **/
     run: function(creep) {
-
-        if (creep.memory.scouting && creep.carry.energy == 0) {
-            creep.memory.scouting = false;
-            creep.say('need nrg');
-        }
-        if (!creep.memory.scouting && creep.carry.energy == creep.carryCapacity) {
-            creep.memory.scouting = true;
-            creep.say('scouting');
-        }
-
-        if (creep.memory.scouting) {
-            if (creep.room.name == creep.memory.home) {
-                var exit = creep.room.findExitTo(creep.memory.target);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-
-            } else {
-                var exit = creep.room.findExitTo(creep.memory.home);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
-                creep.say('going home');
+        
+        // If we're in the target room, start defense.
+        if (creep.room.name == creep.memory.target && !creep.memory.inPosition) {
+            
+            if (creep.room.name == Game.flags.Scout1.room.name && creep.pos.isEqualTo(Game.flags.Scout1)) {
+                creep.memory.inPosition = true;
             }
-        }
-        // Not scouting--Need Energy
-        else {
-            if (creep.room.name == creep.memory.target) {
-                var target = creep.pos.findClosestByRange(FIND_HOSTILE_CREEPS);
-                if (target) {
-                    if (creep.attack(target) == ERR_NOT_IN_RANGE) {
-                        creep.moveTo(target);
+            else if (creep.room.name == Game.flags.FencePoint2.room.name && creep.pos.isEqualTo(Game.flags.FencePoint2)) {
+                creep.memory.inPosition = true;
+            }
+            
+            if (!(creep.memory.inPosition) || creep.memory.inPosition == '') {
+                var found = creep.room.lookForAt(LOOK_CREEPS, Game.flags.Scout1);
+                //console.log(found);
+                if(found.length < 1) {
+                    creep.moveTo(Game.flags.Scout1);
+                }
+                else {
+                    found = creep.room.lookForAt(LOOK_CREEPS, Game.flags.Scout2);
+                    if (found.length < 1) {
+                        creep.moveTo(Game.flags.Scout2);
                     }
                 }
-            } else {
-                var exit = creep.room.findExitTo(creep.memory.target);
-                creep.moveTo(creep.pos.findClosestByRange(exit));
             }
         }
-    }
+        // Move to target room
+        else if (creep.room.name != creep.memory.target) {
+            var errnum = creep.moveTo(Game.flags[creep.memory.target]);
+        }
+        else if(creep.memory.inPosition == true) {
+            creep.say('\u262E', 1)
+        }
+	}
 };
 
-module.exports = roleScout;
+module.exports = roleFenceGuard;

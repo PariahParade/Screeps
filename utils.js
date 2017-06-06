@@ -35,22 +35,23 @@ module.exports = {
      * @returns {Int} Return code of Game.market.deal or -99 if no deal found
      */
     makeMarketSale: function (resourceToSell, room, minPrice = 0.05, amountToSend = 200) {
-        if (room.terminal && room.terminal.store[RESOURCE_ENERGY] >= 2000 && room.terminal.store[resourceToSell] >= 2000) { 
+        if (room.terminal && room.terminal.store[RESOURCE_ENERGY] >= 500 && room.terminal.store[resourceToSell] >= 2000) { 
             
             var orders = Game.market.getAllOrders(order => order.resourceType == resourceToSell 
                 && order.type == ORDER_BUY 
-                && Game.market.calcTransactionCost(amountToSend, room.name, order.roomName) < 400); 
+                && Game.market.calcTransactionCost(amountToSend, room.name, order.roomName) < 1500); 
             
             //console.log(resourceToSell + ' buy orders found: ' + orders.length);
             orders.sort(function(a,b){return b.price - a.price;}); 
             //console.log('Best price: ' + orders[0].price); 
             
             if (orders.length > 0) {
-                if (orders[0].price > 0.001) {
+                if (orders[0].price >= minPrice) {
                     //console.log(resourceToSell + ' ' + amountToSend + ' ' + orders[0].price);
                     //Turned off until tested
                     var result = Game.market.deal(orders[0].id, amountToSend, room.name); 
-                    if (result === 0){console.log('Sold ' + amountToSend + ' ' + resourceToSell + '. Earned ' + amountToSend * orders[0].price + " credits.")};
+                    //if (result === 0){console.log('Sold ' + amountToSend + ' ' + resourceToSell + '. Earned ' + amountToSend * orders[0].price + ' credits. (' + orders[0].price + ' each)')};
+                    if (result === 0){console.log(`Sold ${amountToSend} ${resourceToSell} to ${room.name}.  Earned ${amountToSend * orders[0].price} credits. (${orders[0].price} each). Credits: ${(Game.market.credits).toFixed(2)}`)};
                 }
             }
             else {
@@ -58,7 +59,149 @@ module.exports = {
             }
         }
     },
+    
+    
+    needsRemoteSpawning: function(spawnName) {
+        var fullSpawnNumber = _.trimLeft(spawnName, 'Spawn');
+        var spawnNumber = fullSpawnNumber.slice(0, 1);
+        var remoteFlags = _.filter(Game.flags, f => _.startsWith(f.name, 'Remote_' + spawnNumber));
+        
+        var remoteSpawnsNeeded = {};
+        
+        _.forEach(remoteFlags, function(n, key) {
+            let LDMiners    = _.sum(Game.creeps, (c) => c.memory.remoteFlag == n.name && c.memory.role == 'LDMiner');
+            let LDHaulers   = _.sum(Game.creeps, (c) => c.memory.remoteFlag == n.name && c.memory.role == 'LDHauler');
+            let Claimers    = _.sum(Game.creeps, (c) => c.memory.target == n.pos.roomName && c.memory.role == 'claimer');
 
+            // If claim is greater than 2k, we don't need to spawn a claimer.
+            // Check if we have room vision first.
+            if (Game.rooms[n.pos.roomName] && Game.rooms[n.pos.roomName].controller.reservation){
+                //console.log(ex(Game.rooms[n.pos.roomName].controller.reservation.ticksToEnd))
+                var claimRoomReservation = Game.rooms[n.pos.roomName].controller.reservation.ticksToEnd;
+                
+                if (claimRoomReservation > 2000 && Claimers < 1) {
+                    // Set to 1 so that a claimer isn't spawned.
+                    Claimers = 1;
+                }
+            }
+
+            //If a spawn is needed, create the array.
+            if (LDMiners < 1 || LDHaulers < 1 || Claimers < 1) {
+                remoteSpawnsNeeded[n.name] = [];
+                
+                if (LDMiners < 1) {
+                    remoteSpawnsNeeded[n.name].push('LDMiner');
+                }
+                if (LDHaulers < 1) {
+                    remoteSpawnsNeeded[n.name].push('LDHauler');
+                }
+                if (Claimers < 1) {
+                    remoteSpawnsNeeded[n.name].push('claimer');
+                }
+            }
+
+        });
+        
+        var spawnerToUse;
+        
+        _.forEach(remoteSpawnsNeeded, function(n, key) {
+            var firstCut = _.trimLeft(key, 'Remote_');
+            spawnerToUse = firstCut.slice(0,1);
+        });
+        
+        //if (_.size(remoteSpawnsNeeded) > 0 ) { console.log(spawnName + ' ' + spawnerToUse + ex(remoteSpawnsNeeded)); }
+        
+        var spawnerString = 'Spawn' + spawnerToUse;
+        var firstToSpawn;
+        var returnValue = {};
+        var needsToSpawnSomething;
+        
+        if (spawnerString != 'Spawn' && _.startsWith(spawnName, spawnerString)) {
+            needsToSpawnSomething = remoteSpawnsNeeded[_.first(Object.keys(remoteSpawnsNeeded))][0]    
+        }
+        
+        if (spawnerString != 'Spawn' && _.startsWith(spawnName, spawnerString) && needsToSpawnSomething) {
+            firstToSpawn = remoteSpawnsNeeded[_.first(Object.keys(remoteSpawnsNeeded))][0];
+            var spawnFlag = _.first(Object.keys(remoteSpawnsNeeded));
+            var spawnRoom = Game.flags[spawnFlag].pos.roomName;
+            
+            returnValue = {
+                targetRoom: spawnRoom,
+                creepToSpawn: firstToSpawn,
+                flagName: spawnFlag
+            }
+            
+            if (firstToSpawn == 'LDMiner') {
+                //console.log(spawnName + ' Spawnin me a LDMiner!');
+            }
+            else if (firstToSpawn == 'LDHauler') {
+                //console.log(spawnName + ' Spawnin me a LDHauler!');
+            }
+            else if (firstToSpawn == 'claimer') {
+                //console.log(spawnName + ' Spawnin me a claimer!');
+            }
+        }
+        
+        return returnValue;
+        
+    },
+    
+    needsSKSpawning: function(spawnName) {
+        var fullSpawnNumber = _.trimLeft(spawnName, 'Spawn');
+        var spawnNumber = fullSpawnNumber.slice(0, 1);
+        var remoteFlags = _.filter(Game.flags, f => _.startsWith(f.name, 'SK_' + spawnNumber));
+        
+        var remoteSpawnsNeeded = {};
+        
+        _.forEach(remoteFlags, function(n, key) {
+            let SKGuards    = _.sum(Game.creeps, (c) => c.memory.remoteFlag == n.name && c.memory.role == 'SKGuard');
+            let LDHaulers   = _.sum(Game.creeps, (c) => c.memory.remoteFlag == n.name && c.memory.role == 'LDHauler');
+            
+            //If a spawn is needed, create the array.
+            if (SKGuards < 1 || LDHaulers < 1) {
+                remoteSpawnsNeeded[n.name] = [];
+                
+                if (SKGuards < 1) {
+                    remoteSpawnsNeeded[n.name].push('SKGuard');
+                }
+                if (LDHaulers < 1) {
+                    remoteSpawnsNeeded[n.name].push('LDHauler');
+                }
+            }
+        });
+        
+        var spawnerToUse;
+        
+        _.forEach(remoteSpawnsNeeded, function(n, key) {
+            var firstCut = _.trimLeft(key, 'SK_');
+            spawnerToUse = firstCut.slice(0,1);
+        });
+        
+        //if (_.size(remoteSpawnsNeeded) > 0 ) { console.log(spawnName + ' ' + spawnerToUse + ex(remoteSpawnsNeeded)); }
+        
+        var spawnerString = 'Spawn' + spawnerToUse;
+        var firstToSpawn;
+        var returnValue = {};
+        var needsToSpawnSomething;
+        
+        if (spawnerString != 'Spawn' && _.startsWith(spawnName, spawnerString)) {
+            needsToSpawnSomething = remoteSpawnsNeeded[_.first(Object.keys(remoteSpawnsNeeded))][0]    
+        }
+        
+        if (spawnerString != 'Spawn' && _.startsWith(spawnName, spawnerString) && needsToSpawnSomething) {
+            firstToSpawn = remoteSpawnsNeeded[_.first(Object.keys(remoteSpawnsNeeded))][0];
+            var spawnFlag = _.first(Object.keys(remoteSpawnsNeeded));
+            var spawnRoom = Game.flags[spawnFlag].pos.roomName;
+            
+            returnValue = {
+                targetRoom: spawnRoom,
+                creepToSpawn: firstToSpawn,
+                flagName: spawnFlag
+            }
+        }
+        
+        return returnValue;
+    },
 
     /**
      * Determines whether a structure of the given type can be built in the given room

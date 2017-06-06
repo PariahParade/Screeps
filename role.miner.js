@@ -1,18 +1,9 @@
+require('constants');
+
 var roleMiner = {
 
     run: function(creep) {
 
-        // If room level is below 3, we have to move stuff back to spawn/ext
-        /*
-        if (!creep.memory.harvester) {
-            if (creep.room.controller.level < 3) {
-                creep.memory.harvester = true;
-            }
-            else {
-                creep.memory.harvester = false;
-            }
-        }
-*/
         if(!(creep.memory.mining) && creep.carry.energy == 0) {
             creep.memory.mining = true;
             creep.say('I mine gud');
@@ -27,17 +18,17 @@ var roleMiner = {
         //This will effectively cause another miner to spawn, as the spawn
         //engine totals based on how many of a role have their name as
         //sourceSpawn
-        if (creep.ticksToLive <= 60) {
+        if (creep.ticksToLive <= 40) {
             creep.memory.sourceSpawn = '';
         }
 	    
         if(creep.memory.mining) {
-            creep.say('mine');
+            creep.say(MUSIC_NOTES[Math.floor(Math.random() * MUSIC_NOTES.length)], 1);
 	        
             //If the creep doesn't have a node assigned, find an unclaimed node.
             if(!creep.memory.miningNode){
                 var sources = creep.room.find(FIND_SOURCES);
-                var check=[];
+
                 // Loop through every source. If the id matches a source that a creep has in memory, filter it out
                 sources.forEach(function(srs){
                     var tmp = creep.room.find(FIND_MY_CREEPS, {filter: (s) => s.memory.miningNode == srs.id && s.memory.role == 'miner'})
@@ -48,6 +39,7 @@ var roleMiner = {
                 });
             }
             
+            
             let miningNode = Game.getObjectById(creep.memory.miningNode);
             
             if (creep.harvest(miningNode) == ERR_NOT_IN_RANGE) {
@@ -55,13 +47,14 @@ var roleMiner = {
                 creep.moveTo(miningNode);
             }
             else {  
+                var startCpu = Game.cpu.getUsed();
                 // Once in range and mining, we should drop off our resources
                 // To nearby links or containers.
                 //console.log(creep.name + ' ' + _.sum(creep.carry));
                 if (_.sum(creep.carry) >= 40) {
                     
                     // Check if we have a link/container memorized
-                    if (!creep.memory.dropOffId) {
+                    if (!creep.memory.dropOffId || creep.memory.dropOffId == '') {
                         
                         // Find a link/container near us
                         let dropOff = creep.pos.findInRange(FIND_STRUCTURES, 1, {
@@ -79,7 +72,7 @@ var roleMiner = {
                         }
                         //No link/container. Don't run this find/check again.
                         else { 
-                            creep.memory.dropOffId = 'nothing';
+                            creep.memory.dropOffId = '';
                         }
                     }
                     // We have a link memorized, drop off the resources
@@ -90,7 +83,11 @@ var roleMiner = {
                         }
                     }
                 }
+                var elapsed = Game.cpu.getUsed() - startCpu;
             } //End harvest-in-range
+            
+            //console.log(creep.name + ' ' + creep.room.name + ' ' + elapsed);
+            
         } // End mining = true
         // We're in the early stages of a room, and the miner needs to bring energy back.
         // Miners are never harvesters. Evaluate whether to delete this
